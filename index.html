@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover" />
+<title>LaTeX Editor - 支持行内公式</title>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" />
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<style>
+:root {
+  --bg-base:        #1E1E1E;
+  --bg-card:        #2B2B2B;
+  --bg-toolbar:     #242424;
+  --bg-statusbar:   #1A1A1A;
+  --border:         rgba(255,255,255,0.08);
+  --border-focus:   rgba(255,255,255,0.22);
+  --accent:         #0A84FF;
+  --accent-hover:   #1A90FF;
+  --accent-dim:     rgba(10,132,255,0.18);
+  --text-primary:   rgba(255,255,255,0.88);
+  --text-secondary: rgba(255,255,255,0.45);
+  --text-muted:     rgba(255,255,255,0.25);
+  --btn-bg:         rgba(255,255,255,0.07);
+  --btn-hover:      rgba(255,255,255,0.12);
+  --btn-active:     rgba(255,255,255,0.05);
+  --danger:         #FF453A;
+  --success:        #32D74B;
+  --radius:         12px;
+  --radius-sm:      8px;
+  --radius-xs:      6px;
+  --font-ui:        "SF Pro Display","PingFang SC","Inter",system-ui,sans-serif;
+  --font-mono:      "SF Mono","Fira Code","JetBrains Mono",monospace;
+  --shadow-card:    0 2px 16px rgba(0,0,0,0.45), 0 0 0 0.5px rgba(255,255,255,0.06);
+  --shadow-btn:     0 1px 4px rgba(0,0,0,0.4);
+  --transition:     0.2s cubic-bezier(0.4,0,0.2,1);
+  --safe-top:    env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left:   env(safe-area-inset-left, 0px);
+  --safe-right:  env(safe-area-inset-right, 0px);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { height: 100%; overscroll-behavior: none; }
+body {
+  height: 100%;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  min-width: 320px;
+  padding-top: var(--safe-top);
+  padding-left: var(--safe-left);
+  padding-right: var(--safe-right);
+}
+
+#toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: var(--bg-toolbar);
+  border-bottom: 0.5px solid var(--border);
+  flex-shrink: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+#toolbar::-webkit-scrollbar { display: none; }
+.toolbar-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.04em;
+  margin-right: 4px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-shrink: 0;
+}
+.toolbar-divider {
+  width: 0.5px;
+  height: 20px;
+  background: var(--border);
+  margin: 0 2px;
+  flex-shrink: 0;
+}
+.toolbar-spacer { flex: 1; min-width: 6px; }
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 12px;
+  min-height: 32px;
+  background: var(--btn-bg);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--transition), transform var(--transition);
+  user-select: none;
+  white-space: nowrap;
+  box-shadow: var(--shadow-btn);
+  outline: none;
+  flex-shrink: 0;
+}
+.btn:hover   { background: var(--btn-hover); border-color: var(--border-focus); transform: scale(0.98); }
+.btn:active  { background: var(--btn-active); transform: scale(0.96); }
+.btn.accent  { background: var(--accent); border-color: transparent; color: #fff; }
+.btn.accent:hover  { background: var(--accent-hover); box-shadow: 0 0 0 3px var(--accent-dim); }
+.shortcut-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 1px 5px;
+  background: rgba(255,255,255,0.06);
+  border: 0.5px solid rgba(255,255,255,0.1);
+  border-radius: 4px;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  flex-shrink: 0;
+}
+
+#main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+#editor-pane {
+  display: flex;
+  flex-direction: column;
+  width: 50%;
+  min-width: 360px;
+  border-right: 0.5px solid var(--border);
+  background: var(--bg-base);
+  flex-shrink: 0;
+  min-height: 0;
+}
+.pane-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 14px;
+  background: var(--bg-toolbar);
+  border-bottom: 0.5px solid var(--border);
+  flex-shrink: 0;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.pane-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.pane-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.pane-header-actions .btn {
+  padding: 4px 10px;
+  font-size: 12px;
+  min-height: 28px;
+}
+#editor-textarea {
+  flex: 1;
+  width: 100%;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: none;
+  resize: none;
+  font-family: var(--font-mono);
+  font-size: 13.5px;
+  line-height: 1.75;
+  padding: 20px 22px;
+  outline: none;
+  tab-size: 2;
+  caret-color: var(--accent);
+  min-height: 0;
+  overflow-y: auto;
+}
+#editor-textarea::selection { background: rgba(10,132,255,0.3); }
+.editor-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  padding: 6px 14px;
+  background: var(--bg-toolbar);
+  border-top: 0.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  overflow-x: auto;
+}
+.hint-item { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+kbd {
+  display: inline-flex; align-items: center;
+  padding: 1px 5px;
+  background: rgba(255,255,255,0.07);
+  border: 0.5px solid rgba(255,255,255,0.12);
+  border-radius: 4px;
+  font-size: 10.5px;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+}
+
+#resizer {
+  width: 4px;
+  background: transparent;
+  cursor: col-resize;
+  flex-shrink: 0;
+  z-index: 5;
+  transition: background 0.2s;
+}
+#resizer:hover { background: rgba(10,132,255,0.4); }
+#resizer.dragging { background: var(--accent); }
+
+#preview-pane {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  background: var(--bg-base);
+  overflow: hidden;
+  min-height: 0;
+}
+#preview-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+#preview-scroll::-webkit-scrollbar { width: 6px; }
+#preview-scroll::-webkit-scrollbar-track { background: transparent; }
+#preview-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+#preview-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  gap: 14px;
+  opacity: 0.4;
+  pointer-events: none;
+  padding: 40px;
+  text-align: center;
+}
+#preview-empty p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  max-width: 220px;
+  line-height: 1.6;
+}
+
+.document-container {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  padding: 28px 32px;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+.document-container:hover {
+  border-color: rgba(255,255,255,0.14);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.55), 0 0 0 0.5px rgba(255,255,255,0.1);
+}
+
+.document-text {
+  margin: 0.75em 0;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  color: var(--text-primary);
+  font-size: 14px;
+}
+.document-text h1 {
+  font-size: 1.8em;
+  margin: 0.67em 0;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.3em;
+}
+.document-text h2 {
+  font-size: 1.5em;
+  margin: 0.75em 0;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.3em;
+}
+.document-text h3 {
+  font-size: 1.25em;
+  margin: 0.83em 0;
+}
+.document-text code {
+  background: rgba(255,255,255,0.07);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+.document-text strong { font-weight: 600; }
+.document-text em { font-style: italic; }
+.document-text .inline-formula {
+  display: inline;
+  margin: 0 0.1em;
+}
+.document-formula {
+  margin: 1.2em 0;
+  text-align: center;
+  overflow-x: auto;
+  padding: 0.25em 0;
+}
+.document-formula .katex-display {
+  margin: 0;
+}
+.katex {
+  color: rgba(255,255,255,0.9) !important;
+}
+.formula-error {
+  color: var(--danger);
+  font-size: 12px;
+  font-family: var(--font-mono);
+  padding: 8px 12px;
+  background: rgba(255,69,58,0.1);
+  border-radius: var(--radius-xs);
+  border-left: 2px solid var(--danger);
+  display: inline-block;
+  text-align: left;
+}
+
+#statusbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 16px;
+  padding-bottom: calc(6px + var(--safe-bottom));
+  background: var(--bg-statusbar);
+  border-top: 0.5px solid var(--border);
+  flex-shrink: 0;
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+}
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--success);
+  flex-shrink: 0;
+  transition: background 0.3s;
+}
+.status-dot.error   { background: var(--danger); }
+.status-dot.working { background: #FF9F0A; animation: pulse 1s ease-in-out infinite; }
+@keyframes pulse { 0%,100% { opacity:1 } 50% { opacity:0.35 } }
+#status-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+#toast {
+  position: fixed;
+  bottom: calc(52px + var(--safe-bottom));
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  padding: 9px 18px;
+  background: rgba(44,44,46,0.96);
+  border: 0.5px solid rgba(255,255,255,0.12);
+  border-radius: 20px;
+  font-size: 13px;
+  color: var(--text-primary);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s, transform 0.25s;
+  z-index: 1000;
+  white-space: nowrap;
+  max-width: calc(100vw - 40px);
+  text-align: center;
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+@media (max-width: 767px) {
+  #main { flex-direction: column; }
+  #editor-pane {
+    width: 100% !important;
+    min-width: unset;
+    height: 40dvh;
+    border-right: none;
+    border-bottom: 0.5px solid var(--border);
+  }
+  #preview-pane { height: 60dvh; flex: none; }
+  #resizer { display: none; }
+  .document-container { padding: 16px 20px; }
+  .pane-header { flex-direction: column; align-items: stretch; gap: 8px; }
+  .pane-header-actions { justify-content: flex-start; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="toolbar">
+    <div class="toolbar-title">📐 LaTeX Editor</div>
+    <div class="toolbar-divider"></div>
+    <button class="btn" id="btn-new">新建</button>
+    <button class="btn" id="btn-open">打开</button>
+    <input type="file" id="file-input" accept=".tex,.txt,.md" style="display:none" />
+    <button class="btn" id="btn-save">保存</button>
+    <div class="toolbar-divider"></div>
+    <button class="btn accent" id="btn-export-preview">导出预览</button>
+    <div class="toolbar-spacer"></div>
+    <div class="shortcut-badge">⌘K 智能转换</div>
+  </div>
+
+  <div id="main">
+    <div id="editor-pane">
+      <div class="pane-header">
+        <span class="pane-label">编辑器</span>
+        <div class="pane-header-actions">
+          <button class="btn" id="btn-smart-convert">✨ 智能转换 (⌘K)</button>
+        </div>
+      </div>
+      <textarea id="editor-textarea" spellcheck="false" placeholder="输入文本，行内公式用 $...$，独立公式用 $$...$$
+
+示例：
+hi $\frac{x}{c}$  ← 行内公式，和文字在同一行
+
+独立公式：
+$$E = mc^2$$"></textarea>
+      <div class="editor-hint">
+        <span class="hint-item"><kbd>$...$</kbd> 行内公式</span>
+        <span class="hint-item"><kbd>$$...$$</kbd> 独立公式</span>
+        <span class="hint-item"><kbd>⌘K</kbd> 智能转换</span>
+      </div>
+    </div>
+    <div id="resizer"></div>
+    <div id="preview-pane">
+      <div class="pane-header">
+        <span class="pane-label">预览</span>
+        <span id="status-element-count" style="font-size:11px;color:var(--text-muted);">0 个元素</span>
+      </div>
+      <div id="preview-scroll">
+        <div id="preview-empty">
+          <p>输入文本和公式后将在此实时渲染<br>行内公式: hi $x/c$</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="statusbar">
+    <div class="status-dot" id="status-dot"></div>
+    <span id="status-text">就绪</span>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+'use strict';
+
+function waitForKatex(cb, tries) {
+  tries = tries || 0;
+  if (typeof katex !== 'undefined') { cb(); return; }
+  if (tries > 50) { console.warn('KaTeX failed to load.'); cb(); return; }
+  setTimeout(function () { waitForKatex(cb, tries + 1); }, 100);
+}
+waitForKatex(init);
+
+function init() {
+  var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  var DEBOUNCE_DELAY = isMobile ? 500 : 300;
+  var EXPORT_PX_RATIO = isMobile ? 1.5 : 2;
+
+  var textarea = document.getElementById('editor-textarea');
+  var previewScroll = document.getElementById('preview-scroll');
+  var previewEmpty = document.getElementById('preview-empty');
+  var statusDot = document.getElementById('status-dot');
+  var statusText = document.getElementById('status-text');
+  var elementCountEl = document.getElementById('status-element-count');
+  var toast = document.getElementById('toast');
+
+  var toastTimer = null;
+  var currentDocumentContainer = null;
+
+  function setStatus(msg, type) {
+    statusText.textContent = msg;
+    statusDot.className = 'status-dot' + (type !== 'ok' ? ' ' + type : '');
+  }
+
+  function showToast(msg, duration) {
+    duration = duration || 2400;
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toast.classList.remove('show'); }, duration);
+  }
+
+  function haptic(pattern) {
+    try { if (navigator.vibrate) navigator.vibrate(pattern || 10); } catch (_) {}
+  }
+
+  function debounce(fn, delay) {
+    var t;
+    return function () {
+      var args = arguments;
+      clearTimeout(t);
+      t = setTimeout(function () { fn.apply(null, args); }, delay);
+    };
+  }
+
+  function renderMarkdownBasic(text) {
+    var html = text.replace(/[&<>]/g, function(m) {
+      if (m === '&') return '&amp;';
+      if (m === '<') return '&lt;';
+      if (m === '>') return '&gt;';
+      return m;
+    });
+    html = html.replace(/^### (.*$)/gm, '<h3>$1</h3>');
+    html = html.replace(/^## (.*$)/gm, '<h2>$1</h2>');
+    html = html.replace(/^# (.*$)/gm, '<h1>$1</h1>');
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/__(.+?)__/g, '<strong>$1</strong>');
+    html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+    html = html.replace(/_(.+?)_/g, '<em>$1</em>');
+    html = html.replace(/`(.+?)`/g, '<code>$1</code>');
+    html = html.replace(/\n/g, '<br>');
+    return html;
+  }
+
+  function renderTextWithInlineFormula(text) {
+    var inlineFormulaRegex = /\$([^\$]+?)\$/g;
+    var lastIndex = 0;
+    var result = '';
+    var match;
+
+    while ((match = inlineFormulaRegex.exec(text)) !== null) {
+      result += renderMarkdownBasic(text.substring(lastIndex, match.index));
+      var formulaContent = match[1].trim();
+      try {
+        if (typeof katex !== 'undefined') {
+          var rendered = katex.renderToString(formulaContent, {
+            throwOnError: false,
+            errorColor: '#FF453A',
+            displayMode: false
+          });
+          result += '<span class="inline-formula">' + rendered + '</span>';
+        } else {
+          result += '<span class="formula-error">[KaTeX未加载] $' + formulaContent + '$</span>';
+        }
+      } catch (err) {
+        result += '<span class="formula-error">❌ ' + err.message + '</span>';
+      }
+      lastIndex = match.index + match[0].length;
+    }
+    result += renderMarkdownBasic(text.substring(lastIndex));
+    return result;
+  }
+
+  function parseContent(source) {
+    var blocks = [];
+    var re = /\$\$([\s\S]+?)\$\$/g;
+    var lastIndex = 0;
+    var match;
+
+    while ((match = re.exec(source)) !== null) {
+      if (match.index > lastIndex) {
+        var textBlock = source.substring(lastIndex, match.index);
+        if (textBlock) {
+          blocks.push({ type: 'text', content: textBlock });
+        }
+      }
+      blocks.push({ type: 'displayFormula', content: match[1].trim() });
+      lastIndex = match.index + match[0].length;
+    }
+
+    if (lastIndex < source.length) {
+      var remainingText = source.substring(lastIndex);
+      if (remainingText) {
+        blocks.push({ type: 'text', content: remainingText });
+      }
+    }
+
+    return blocks;
+  }
+
+  var refreshPreview = debounce(function () {
+    var blocks = parseContent(textarea.value);
+
+    Array.from(previewScroll.children).forEach(function (c) {
+      if (c !== previewEmpty) c.remove();
+    });
+
+    if (blocks.length === 0) {
+      previewEmpty.style.display = 'flex';
+      elementCountEl.textContent = '0 个元素';
+      setStatus('就绪');
+      return;
+    }
+
+    previewEmpty.style.display = 'none';
+
+    var docContainer = document.createElement('div');
+    docContainer.className = 'document-container';
+
+    var formulaCount = 0;
+    var errCount = 0;
+    var textBlockCount = 0;
+
+    blocks.forEach(function (block) {
+      if (block.type === 'text') {
+        var textDiv = document.createElement('div');
+        textDiv.className = 'document-text';
+        textDiv.innerHTML = renderTextWithInlineFormula(block.content);
+        docContainer.appendChild(textDiv);
+        textBlockCount++;
+      } else if (block.type === 'displayFormula') {
+        formulaCount++;
+        var formulaWrapper = document.createElement('div');
+        formulaWrapper.className = 'document-formula';
+
+        try {
+          if (typeof katex !== 'undefined') {
+            katex.render(block.content, formulaWrapper, {
+              throwOnError: false,
+              errorColor: '#FF453A',
+              displayMode: true,
+              output: 'html',
+            });
+          } else {
+            formulaWrapper.textContent = '[KaTeX 未加载] ' + block.content;
+          }
+        } catch (err) {
+          errCount++;
+          var errEl = document.createElement('div');
+          errEl.className = 'formula-error';
+          errEl.textContent = '渲染错误: ' + err.message;
+          formulaWrapper.appendChild(errEl);
+        }
+
+        docContainer.appendChild(formulaWrapper);
+      }
+    });
+
+    previewScroll.appendChild(docContainer);
+    currentDocumentContainer = docContainer;
+
+    elementCountEl.textContent = (textBlockCount + formulaCount) + ' 个元素';
+
+    if (errCount > 0) {
+      setStatus('渲染完成，' + errCount + ' 个公式有语法错误', 'error');
+    } else {
+      setStatus('渲染完成，共 ' + formulaCount + ' 个独立公式，' + textBlockCount + ' 段文本');
+    }
+  }, DEBOUNCE_DELAY);
+
+  var GREEK_MAP = {
+    alpha:'\\alpha', beta:'\\beta', gamma:'\\gamma', delta:'\\delta',
+    epsilon:'\\epsilon', zeta:'\\zeta', eta:'\\eta', theta:'\\theta',
+    iota:'\\iota', kappa:'\\kappa', lambda:'\\lambda', mu:'\\mu',
+    nu:'\\nu', xi:'\\xi', omicron:'\\omicron', pi:'\\pi',
+    rho:'\\rho', sigma:'\\sigma', tau:'\\tau', upsilon:'\\upsilon',
+    phi:'\\phi', chi:'\\chi', psi:'\\psi', omega:'\\omega',
+  };
+
+  function step1_varNumber(t) { return t.replace(/([a-zA-Z])(\d+)/g, '$1^{$2}'); }
+  function step2_subscript(t) { return t.replace(/([a-zA-Z])_([a-zA-Z0-9]+)/g, '$1_{$2}'); }
+  function step3_greek(t) {
+    var re = new RegExp('\\b(' + Object.keys(GREEK_MAP).join('|') + ')\\b', 'g');
+    return t.replace(re, function (m) { return GREEK_MAP[m] || m; });
+  }
+  function step4_fraction(t) {
+    t = t.replace(/([^\s]+)\s+\/\s+([^\s]+)/g, '\\frac{$1}{$2}');
+    t = t.replace(/(?<!\\frac\{[^}]*)([^\s\\{}])\s*\/\s*([^\s\\{}])/g, function(_, a, b) { return '\\frac{' + a + '}{' + b + '}'; });
+    return t;
+  }
+  function step5_wrap(t) { return '$$' + t + '$$'; }
+
+  function smartConvert(text) {
+    var t = text;
+    t = step1_varNumber(t);
+    t = step2_subscript(t);
+    t = step3_greek(t);
+    t = step4_fraction(t);
+    t = step5_wrap(t);
+    return t;
+  }
+
+  function applySmartConvert() {
+    var start = textarea.selectionStart;
+    var end = textarea.selectionEnd;
+    if (start === end) {
+      showToast('请先选中要转换的文本');
+      haptic([10, 30, 10]);
+      return;
+    }
+    var selected = textarea.value.substring(start, end);
+    var converted = smartConvert(selected);
+    var before = textarea.value.substring(0, start);
+    var after = textarea.value.substring(end);
+    textarea.value = before + converted + after;
+    var newEnd = start + converted.length;
+    textarea.setSelectionRange(newEnd, newEnd);
+    textarea.focus();
+    haptic(12);
+    showToast('✨ 智能转换完成');
+    refreshPreview();
+  }
+
+  async function exportPreviewAsImage() {
+    if (!currentDocumentContainer) {
+      showToast('没有可导出的内容');
+      return;
+    }
+    if (typeof htmlToImage === 'undefined') {
+      showToast('⚠ html-to-image 未加载');
+      return;
+    }
+    try {
+      setStatus('正在导出图片...', 'working');
+      var tempContainer = document.createElement('div');
+      tempContainer.style.backgroundColor = '#ffffff';
+      tempContainer.style.padding = '40px';
+      tempContainer.style.display = 'inline-block';
+      var clone = currentDocumentContainer.cloneNode(true);
+      clone.style.backgroundColor = '#ffffff';
+      clone.style.color = '#000000';
+      clone.style.boxShadow = 'none';
+      var textDivs = clone.querySelectorAll('.document-text');
+      textDivs.forEach(function(div) { div.style.color = '#000000'; });
+      var katexElements = clone.querySelectorAll('.katex');
+      katexElements.forEach(function(katexEl) { katexEl.style.color = '#000000'; });
+      tempContainer.appendChild(clone);
+      document.body.appendChild(tempContainer);
+      var dataUrl = await htmlToImage.toPng(tempContainer, {
+        backgroundColor: '#ffffff',
+        pixelRatio: EXPORT_PX_RATIO * 1.5,
+        quality: 1.0,
+      });
+      document.body.removeChild(tempContainer);
+      var timestamp = new Date().toISOString().slice(0,19).replace(/:/g, '-');
+      var a = document.createElement('a');
+      a.href = dataUrl;
+      a.download = 'latex_' + timestamp + '.png';
+      a.click();
+      setStatus('导出成功');
+      showToast('✅ 图片已下载');
+    } catch (err) {
+      setStatus('导出失败', 'error');
+      showToast('⚠ 导出失败');
+    }
+  }
+
+  function exportPreview() {
+    if (!currentDocumentContainer) {
+      showToast('没有可导出的内容');
+      return;
+    }
+    exportPreviewAsImage();
+  }
+
+  function newDocument() {
+    textarea.value = '';
+    refreshPreview();
+    showToast('📄 新建文档');
+  }
+
+  function openFile() {
+    document.getElementById('file-input').click();
+  }
+
+  function handleFileOpen(event) {
+    var file = event.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      textarea.value = e.target.result;
+      refreshPreview();
+      showToast('📂 ' + file.name);
+    };
+    reader.readAsText(file, 'utf-8');
+    event.target.value = '';
+  }
+
+  function saveFile() {
+    var blob = new Blob([textarea.value], { type: 'text/plain;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'document.tex';
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 100);
+    showToast('💾 已保存');
+  }
+
+  document.getElementById('btn-new').addEventListener('click', newDocument);
+  document.getElementById('btn-open').addEventListener('click', openFile);
+  document.getElementById('btn-save').addEventListener('click', saveFile);
+  document.getElementById('btn-export-preview').addEventListener('click', exportPreview);
+  document.getElementById('btn-smart-convert').addEventListener('click', applySmartConvert);
+  document.getElementById('file-input').addEventListener('change', handleFileOpen);
+  textarea.addEventListener('input', refreshPreview);
+
+  document.addEventListener('keydown', function (e) {
+    var mod = e.ctrlKey || e.metaKey;
+    if (!mod) return;
+    switch (e.key.toLowerCase()) {
+      case 'k': e.preventDefault(); applySmartConvert(); break;
+      case 'n': e.preventDefault(); newDocument(); break;
+      case 'o': e.preventDefault(); openFile(); break;
+      case 's': e.preventDefault(); saveFile(); break;
+    }
+  });
+
+  var DEMO = '# 行内公式示例\n\n' +
+             '你可以这样写：hi $\\frac{x}{c}$  ← 公式和文字在同一行！\n\n' +
+             '也可以写：欧拉公式 $e^{i\\pi} + 1 = 0$ 很美。\n\n' +
+             '## 独立公式块\n\n' +
+             '独立公式会居中显示：\n\n' +
+             '$$\\int_{-\\infty}^{\\infty} e^{-x^2} dx = \\sqrt{\\pi}$$\n\n' +
+             '## 智能转换\n\n' +
+             '选中 `x2 + y2 / r2` 然后按 `⌘K`，会自动转换为独立公式。';
+
+  textarea.value = DEMO;
+  refreshPreview();
+  setStatus('就绪 — 行内公式用 $...$，独立公式用 $$...$$');
+}
+</script>
+</body>
+</html>
