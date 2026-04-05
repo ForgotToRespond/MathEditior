@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover" />
-<title>LaTeX Editor</title>
+<title>LaTeX Editor | 公式编辑与函数绘图</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -37,7 +37,6 @@
   --radius:         14px;
   --radius-sm:      9px;
   --radius-xs:      6px;
-  /* fonts */
   --font-ui:        "Noto Sans SC", -apple-system, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
   --font-editor:    "JetBrains Mono", "Noto Sans SC", "PingFang SC", "Fira Code", "Cascadia Code", "Consolas", monospace;
   --font-preview:   "Noto Serif SC", "Source Han Serif SC", "PingFang SC", "Microsoft YaHei", Georgia, serif;
@@ -73,7 +72,6 @@ body {
   padding-right: var(--safe-right);
 }
 
-/* ─── TOOLBAR ─── */
 #toolbar {
   display: flex;
   align-items: center;
@@ -138,7 +136,6 @@ body {
   flex-shrink: 0;
 }
 
-/* ─── MAIN LAYOUT ─── */
 #main { display: flex; flex: 1; overflow: hidden; min-height: 0; }
 #editor-pane {
   display: flex; flex-direction: column;
@@ -161,7 +158,6 @@ body {
 .pane-header-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .pane-header-actions .btn { padding: 4px 10px; font-size: 12px; min-height: 28px; }
 
-/* ─── EDITOR TEXTAREA ─── */
 #editor-textarea {
   flex: 1; width: 100%;
   background: var(--bg-card);
@@ -191,15 +187,10 @@ kbd {
   font-size: 10.5px; font-family: var(--font-editor); color: var(--text-secondary);
 }
 
-/* ─── RESIZER ─── */
-#resizer {
-  width: 4px; background: transparent; cursor: col-resize; flex-shrink: 0; z-index: 5;
-  transition: background 0.2s;
-}
+#resizer { width: 4px; background: transparent; cursor: col-resize; flex-shrink: 0; z-index: 5; transition: background 0.2s; }
 #resizer:hover { background: rgba(10,132,255,0.4); }
 #resizer.dragging { background: var(--accent); }
 
-/* ─── PREVIEW PANE ─── */
 #preview-pane { display: flex; flex-direction: column; flex: 1; background: var(--bg-base); overflow: hidden; min-height: 0; }
 #preview-scroll { flex: 1; overflow-y: auto; padding: 16px; }
 #preview-scroll::-webkit-scrollbar { width: 6px; }
@@ -216,12 +207,6 @@ kbd {
   box-shadow: var(--shadow-card); padding: 28px 32px;
   transition: border-color var(--transition), box-shadow var(--transition);
 }
-.document-container:hover {
-  border-color: rgba(255,255,255,0.14);
-  box-shadow: 0 4px 28px rgba(0,0,0,0.58), 0 0 0 0.5px rgba(255,255,255,0.1);
-}
-
-/* ─── PREVIEW TEXT ─── */
 .document-text {
   margin: 0.75em 0; line-height: 1.85; white-space: pre-wrap;
   color: var(--text-primary);
@@ -239,7 +224,6 @@ kbd {
 .katex { color: rgba(255,255,255,0.92) !important; font-size: 1.05em; }
 .formula-error { color: var(--danger); font-size: 12px; font-family: var(--font-editor); padding: 8px 12px; background: rgba(255,69,58,0.1); border-radius: var(--radius-xs); border-left: 2px solid var(--danger); display: inline-block; }
 
-/* ─── PLOT OUTPUT ─── */
 .plot-output-block {
   margin-top: 16px;
   background: var(--bg-card);
@@ -256,8 +240,8 @@ kbd {
 }
 .plot-output-title { font-size: 12px; font-weight: 600; color: var(--text-secondary); letter-spacing: 0.06em; }
 .plot-output-meta { font-size: 11px; color: var(--text-muted); }
-.plot-canvas-wrapper { padding: 12px; display: flex; justify-content: center; }
-.plot-canvas-wrapper canvas { border-radius: 8px; max-width: 100%; display: block; }
+.plot-canvas-wrapper { padding: 12px; display: flex; justify-content: center; background: #101012; border-radius: 8px; }
+.plot-canvas-wrapper canvas { border-radius: 8px; max-width: 100%; display: block; box-shadow: 0 2px 12px rgba(0,0,0,0.4); }
 .plot-legend {
   display: flex; flex-wrap: wrap; gap: 8px;
   padding: 10px 14px 14px;
@@ -272,7 +256,6 @@ kbd {
   flex-shrink: 0;
 }
 
-/* ─── STATUS BAR ─── */
 #statusbar {
   display: flex; align-items: center; gap: 10px;
   padding: 6px 16px; padding-bottom: calc(6px + var(--safe-bottom));
@@ -287,7 +270,6 @@ kbd {
 @keyframes pulse { 0%,100% { opacity:1 } 50% { opacity:0.35 } }
 #status-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-/* ─── TOAST ─── */
 #toast {
   position: fixed; bottom: calc(52px + var(--safe-bottom)); left: 50%;
   transform: translateX(-50%) translateY(10px);
@@ -300,9 +282,7 @@ kbd {
 }
 #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-/* ════════════════════════════════════════════
-   PLOT MODAL — APPLE STYLE
-═══════════════════════════════════════════ */
+/* Plot Modal Apple Style */
 #plot-modal-overlay {
   position: fixed; inset: 0; z-index: 500;
   display: flex; align-items: center; justify-content: center;
@@ -312,9 +292,7 @@ kbd {
   opacity: 0; pointer-events: none;
   transition: opacity 0.25s ease;
 }
-#plot-modal-overlay.visible {
-  opacity: 1; pointer-events: all;
-}
+#plot-modal-overlay.visible { opacity: 1; pointer-events: all; }
 #plot-modal {
   background: rgba(38,38,40,0.97);
   border: 0.5px solid rgba(255,255,255,0.14);
@@ -326,209 +304,52 @@ kbd {
   opacity: 0;
   transition: transform 0.38s cubic-bezier(0.34,1.56,0.64,1), opacity 0.25s ease;
   backdrop-filter: blur(40px) saturate(180%);
-  -webkit-backdrop-filter: blur(40px) saturate(180%);
 }
-#plot-modal-overlay.visible #plot-modal {
-  transform: scale(1) translateY(0);
-  opacity: 1;
-}
-#plot-modal-overlay.closing #plot-modal {
-  transform: scale(0.92) translateY(8px);
-  opacity: 0;
-  transition: transform 0.18s cubic-bezier(0.4,0,1,1), opacity 0.16s ease;
-}
-#plot-modal-overlay.closing {
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-
-.modal-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 18px 20px 14px;
-}
-.modal-title {
-  font-size: 17px; font-weight: 600;
-  font-family: var(--font-ui);
-  color: var(--text-primary);
-  letter-spacing: -0.01em;
-}
-.modal-close-btn {
-  width: 28px; height: 28px;
-  background: rgba(255,255,255,0.1);
-  border: none; border-radius: 50%;
-  color: var(--text-secondary);
-  font-size: 12px; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: background var(--transition);
-}
+#plot-modal-overlay.visible #plot-modal { transform: scale(1) translateY(0); opacity: 1; }
+.modal-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px 14px; }
+.modal-title { font-size: 17px; font-weight: 600; font-family: var(--font-ui); color: var(--text-primary); letter-spacing: -0.01em; }
+.modal-close-btn { width: 28px; height: 28px; background: rgba(255,255,255,0.1); border: none; border-radius: 50%; color: var(--text-secondary); font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
 .modal-close-btn:hover { background: rgba(255,255,255,0.18); }
-
 .modal-divider { height: 0.5px; background: var(--border); margin: 0; }
-
 .modal-section { padding: 14px 20px; }
 .modal-section + .modal-section { border-top: 0.5px solid var(--border); padding-top: 12px; }
-.modal-section-label {
-  font-size: 11px; font-weight: 600; text-transform: uppercase;
-  letter-spacing: 0.07em; color: var(--text-muted);
-  margin-bottom: 10px;
-}
-
-/* Function chips */
+.modal-section-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); margin-bottom: 10px; }
 #plot-functions-list { display: flex; flex-direction: column; gap: 7px; }
-.fn-chip {
-  display: flex; align-items: center; gap: 10px;
-  padding: 9px 12px;
-  background: rgba(255,255,255,0.04);
-  border: 0.5px solid rgba(255,255,255,0.09);
-  border-radius: 10px;
-  font-family: var(--font-editor);
-  font-size: 13px;
-  color: var(--text-primary);
-  transition: background 0.15s;
-}
-.fn-chip:hover { background: rgba(255,255,255,0.07); }
+.fn-chip { display: flex; align-items: center; gap: 10px; padding: 9px 12px; background: rgba(255,255,255,0.04); border: 0.5px solid rgba(255,255,255,0.09); border-radius: 10px; font-family: var(--font-editor); font-size: 13px; color: var(--text-primary); }
 .fn-color-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 .fn-expr { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .fn-error { color: var(--danger); font-size: 11px; }
-.fn-no-funcs { font-size: 13px; color: var(--text-muted); text-align: center; padding: 12px 0; }
-
-/* Range grid */
-.modal-range-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
-}
-.range-group label {
-  display: block; font-size: 11px; color: var(--text-muted);
-  margin-bottom: 4px; font-family: var(--font-ui);
-}
-.range-group input[type=number] {
-  width: 100%; padding: 8px 11px;
-  background: rgba(255,255,255,0.06);
-  border: 0.5px solid rgba(255,255,255,0.12);
-  border-radius: 9px;
-  color: var(--text-primary);
-  font-family: var(--font-editor);
-  font-size: 14px;
-  outline: none;
-  transition: border-color var(--transition), background var(--transition);
-  -moz-appearance: textfield;
-}
-.range-group input[type=number]::-webkit-inner-spin-button,
-.range-group input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
-.range-group input[type=number]:focus {
-  border-color: var(--accent);
-  background: rgba(10,132,255,0.08);
-}
-
-/* Segmented control */
-.segmented-wrap { display: flex; gap: 0; }
-.segmented-control {
-  display: flex;
-  background: rgba(255,255,255,0.05);
-  border: 0.5px solid rgba(255,255,255,0.1);
-  border-radius: 10px;
-  padding: 3px;
-  gap: 2px;
-  width: 100%;
-}
+.modal-range-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.range-group label { display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
+.range-group input[type=number] { width: 100%; padding: 8px 11px; background: rgba(255,255,255,0.06); border: 0.5px solid rgba(255,255,255,0.12); border-radius: 9px; color: var(--text-primary); font-family: var(--font-editor); font-size: 14px; outline: none; }
+.range-group input[type=number]:focus { border-color: var(--accent); background: rgba(10,132,255,0.08); }
+.segmented-control { display: flex; background: rgba(255,255,255,0.05); border: 0.5px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 3px; gap: 2px; width: 100%; }
 .segmented-control input[type=radio] { display: none; }
-.segmented-control label {
-  flex: 1; text-align: center;
-  padding: 7px 10px;
-  border-radius: 8px;
-  font-size: 13px; font-weight: 500;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: background var(--transition), color var(--transition);
-  user-select: none;
-  font-family: var(--font-ui);
-  white-space: nowrap;
-}
-.segmented-control input[type=radio]:checked + label {
-  background: rgba(255,255,255,0.14);
-  color: var(--text-primary);
-  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
-}
-.segmented-control label:hover { color: var(--text-primary); }
-
-/* Modal footer */
-.modal-footer {
-  display: flex; gap: 10px;
-  padding: 14px 20px; padding-bottom: calc(14px + var(--safe-bottom));
-  border-top: 0.5px solid var(--border);
-}
-.modal-btn-cancel {
-  flex: 1; padding: 12px;
-  background: rgba(255,255,255,0.07);
-  border: 0.5px solid rgba(255,255,255,0.1);
-  border-radius: 12px;
-  color: var(--text-secondary); font-family: var(--font-ui);
-  font-size: 15px; font-weight: 500; cursor: pointer;
-  transition: background var(--transition);
-}
-.modal-btn-cancel:hover { background: rgba(255,255,255,0.12); color: var(--text-primary); }
-.modal-btn-confirm {
-  flex: 2; padding: 12px;
-  background: var(--accent);
-  border: none; border-radius: 12px;
-  color: #fff; font-family: var(--font-ui);
-  font-size: 15px; font-weight: 600; cursor: pointer;
-  transition: background var(--transition), box-shadow var(--transition), transform var(--transition);
-}
+.segmented-control label { flex: 1; text-align: center; padding: 7px 10px; border-radius: 8px; font-size: 13px; font-weight: 500; color: var(--text-secondary); cursor: pointer; transition: all 0.2s; font-family: var(--font-ui); }
+.segmented-control input[type=radio]:checked + label { background: rgba(255,255,255,0.14); color: var(--text-primary); box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
+.modal-footer { display: flex; gap: 10px; padding: 14px 20px; padding-bottom: calc(14px + var(--safe-bottom)); border-top: 0.5px solid var(--border); }
+.modal-btn-cancel, .modal-btn-confirm { flex: 1; padding: 12px; border-radius: 12px; font-size: 15px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+.modal-btn-cancel { background: rgba(255,255,255,0.07); border: 0.5px solid rgba(255,255,255,0.1); color: var(--text-secondary); }
+.modal-btn-confirm { flex: 2; background: var(--accent); border: none; color: #fff; font-weight: 600; }
 .modal-btn-confirm:hover { background: var(--accent-hover); box-shadow: 0 0 0 4px var(--accent-dim); }
-.modal-btn-confirm:active { transform: scale(0.97); }
-.modal-btn-confirm:disabled { opacity: 0.4; cursor: not-allowed; }
-
-/* Mobile bottom sheet */
-@media (max-width: 767px) {
-  #plot-modal-overlay { align-items: flex-end; padding: 0; }
-  #plot-modal {
-    max-width: 100%; border-radius: 20px 20px 0 0;
-    transform: translateY(100%);
-    transition: transform 0.38s cubic-bezier(0.32,0.72,0,1), opacity 0.25s ease;
-  }
-  #plot-modal-overlay.visible #plot-modal { transform: translateY(0); opacity: 1; }
-  #plot-modal-overlay.closing #plot-modal {
-    transform: translateY(100%); opacity: 1;
-    transition: transform 0.22s cubic-bezier(0.4,0,1,1);
-  }
-  .modal-drag-indicator {
-    width: 36px; height: 4px; border-radius: 2px;
-    background: rgba(255,255,255,0.2);
-    margin: 10px auto 0;
-  }
-}
-@media (min-width: 768px) { .modal-drag-indicator { display: none; } }
-
-/* ─── DESKTOP FONT ENHANCEMENT ─── */
-@media (min-width: 1024px) {
-  #editor-textarea {
-    font-size: 15.5px;
-    line-height: 1.85;
-    letter-spacing: 0.4px;
-  }
-  .document-text {
-    font-size: 16.5px;
-    line-height: 1.9;
-  }
-}
 
 @media (max-width: 767px) {
+  #plot-modal-overlay { align-items: flex-end; }
+  #plot-modal { max-width: 100%; border-radius: 20px 20px 0 0; transform: translateY(100%); }
+  #plot-modal-overlay.visible #plot-modal { transform: translateY(0); }
+  .modal-drag-indicator { width: 36px; height: 4px; background: rgba(255,255,255,0.2); margin: 10px auto 0; border-radius: 2px; }
   #main { flex-direction: column; }
   #editor-pane { width: 100% !important; min-width: unset; height: 40dvh; border-right: none; border-bottom: 0.5px solid var(--border); }
   #preview-pane { height: 60dvh; flex: none; }
   #resizer { display: none; }
   .document-container { padding: 16px 20px; }
-  .pane-header { flex-direction: column; align-items: stretch; gap: 8px; }
-  .pane-header-actions { justify-content: flex-start; }
-  #editor-textarea { font-size: 14px; line-height: 1.7; }
-  .document-text { font-size: 14.5px; }
 }
 </style>
 </head>
 <body>
 <div id="app">
   <div id="toolbar">
-    <div class="toolbar-title">📐 LaTeX Editor</div>
+    <div class="toolbar-title">LaTeX Editor</div>
     <div class="toolbar-divider"></div>
     <button class="btn" id="btn-new">新建</button>
     <button class="btn" id="btn-open">打开</button>
@@ -538,9 +359,9 @@ kbd {
     <button class="btn accent" id="btn-export-pdf">导出 PDF</button>
     <button class="btn" id="btn-export-preview">导出图片</button>
     <div class="toolbar-divider"></div>
-    <button class="btn plot-btn" id="btn-plot">📈 绘图</button>
+    <button class="btn plot-btn" id="btn-plot">绘图</button>
     <div class="toolbar-spacer"></div>
-    <div class="shortcut-badge">⌘K 转换 · ⌘P 绘图</div>
+    <div class="shortcut-badge">Ctrl+K 转换 · Ctrl+P 绘图</div>
   </div>
 
   <div id="main">
@@ -548,21 +369,16 @@ kbd {
       <div class="pane-header">
         <span class="pane-label">编辑器</span>
         <div class="pane-header-actions">
-          <button class="btn" id="btn-smart-convert">✨ 智能转换 (⌘K)</button>
-          <button class="btn plot-btn" id="btn-plot-pane">📈 绘图 (⌘P)</button>
+          <button class="btn" id="btn-smart-convert">智能转换 (Ctrl+K)</button>
+          <button class="btn plot-btn" id="btn-plot-pane">绘图 (Ctrl+P)</button>
         </div>
       </div>
-      <textarea id="editor-textarea" spellcheck="false" placeholder="输入文本，行内公式用 $...$，独立公式用 $$...$$
-
-绘图示例（选中后按 ⌘P）：
-y = x^2
-y = \sin(x)
-y = \frac{1}{x}"></textarea>
+      <textarea id="editor-textarea" spellcheck="false" placeholder="输入文本，行内公式用 $...$，独立公式用 $$...$$&#10;&#10;绘图示例（选中后按 Ctrl+P）：&#10;y = x^2&#10;y = sin(x)&#10;y = 1/x"></textarea>
       <div class="editor-hint">
         <span class="hint-item"><kbd>$...$</kbd> 行内</span>
         <span class="hint-item"><kbd>$$...$$</kbd> 独立</span>
-        <span class="hint-item"><kbd>⌘K</kbd> 转换</span>
-        <span class="hint-item"><kbd>⌘P</kbd> 绘图</span>
+        <span class="hint-item"><kbd>Ctrl+K</kbd> 转换</span>
+        <span class="hint-item"><kbd>Ctrl+P</kbd> 绘图</span>
         <span class="hint-item">选中 y=f(x) 后绘图</span>
       </div>
     </div>
@@ -573,883 +389,114 @@ y = \frac{1}{x}"></textarea>
         <span id="status-element-count" style="font-size:11px;color:var(--text-muted);">0 个元素</span>
       </div>
       <div id="preview-scroll">
-        <div id="preview-empty">
-          <p>输入文本和公式后将在此实时渲染<br>选中 y=f(x) 按 ⌘P 绘图</p>
-        </div>
+        <div id="preview-empty"><p>输入文本和公式后将在此实时渲染<br>选中 y=f(x) 按 Ctrl+P 绘图</p></div>
       </div>
     </div>
   </div>
-
-  <div id="statusbar">
-    <div class="status-dot" id="status-dot"></div>
-    <span id="status-text">就绪</span>
-  </div>
+  <div id="statusbar"><div class="status-dot" id="status-dot"></div><span id="status-text">就绪</span></div>
 </div>
 
-<!-- ── PLOT MODAL ── -->
 <div id="plot-modal-overlay">
   <div id="plot-modal">
     <div class="modal-drag-indicator"></div>
-    <div class="modal-header">
-      <span class="modal-title">📈 绘制函数图像</span>
-      <button class="modal-close-btn" id="plot-modal-close" aria-label="关闭">✕</button>
-    </div>
-
+    <div class="modal-header"><span class="modal-title">绘制函数图像</span><button class="modal-close-btn" id="plot-modal-close">✕</button></div>
     <div class="modal-divider"></div>
-
-    <div class="modal-section">
-      <div class="modal-section-label">检测到的函数</div>
-      <div id="plot-functions-list"></div>
-    </div>
-
-    <div class="modal-section">
-      <div class="modal-section-label">X 轴范围</div>
-      <div class="modal-range-grid">
-        <div class="range-group">
-          <label>最小值</label>
-          <input type="number" id="plot-xmin" value="-10">
-        </div>
-        <div class="range-group">
-          <label>最大值</label>
-          <input type="number" id="plot-xmax" value="10">
-        </div>
-      </div>
-    </div>
-
-    <div class="modal-section">
-      <div class="modal-section-label">Y 轴范围</div>
-      <div class="modal-range-grid">
-        <div class="range-group">
-          <label>最小值</label>
-          <input type="number" id="plot-ymin" value="-10">
-        </div>
-        <div class="range-group">
-          <label>最大值</label>
-          <input type="number" id="plot-ymax" value="10">
-        </div>
-      </div>
-    </div>
-
-    <div class="modal-section">
-      <div class="modal-section-label">图像尺寸</div>
-      <div class="segmented-control">
-        <input type="radio" name="plot-size" id="size-sm" value="400">
-        <label for="size-sm">小 (400)</label>
-        <input type="radio" name="plot-size" id="size-md" value="600" checked>
-        <label for="size-md">中 (600)</label>
-        <input type="radio" name="plot-size" id="size-lg" value="800">
-        <label for="size-lg">大 (800)</label>
-      </div>
-    </div>
-
-    <div class="modal-footer">
-      <button class="modal-btn-cancel" id="plot-modal-cancel">取消</button>
-      <button class="modal-btn-confirm" id="plot-modal-confirm">绘制图像</button>
-    </div>
+    <div class="modal-section"><div class="modal-section-label">检测到的函数</div><div id="plot-functions-list"></div></div>
+    <div class="modal-section"><div class="modal-section-label">X 轴范围</div><div class="modal-range-grid"><div class="range-group"><label>最小值</label><input type="number" id="plot-xmin" value="-10"></div><div class="range-group"><label>最大值</label><input type="number" id="plot-xmax" value="10"></div></div></div>
+    <div class="modal-section"><div class="modal-section-label">Y 轴范围</div><div class="modal-range-grid"><div class="range-group"><label>最小值</label><input type="number" id="plot-ymin" value="-10"></div><div class="range-group"><label>最大值</label><input type="number" id="plot-ymax" value="10"></div></div></div>
+    <div class="modal-section"><div class="modal-section-label">图像尺寸</div><div class="segmented-control"><input type="radio" name="plot-size" id="size-sm" value="400"><label for="size-sm">小 (400)</label><input type="radio" name="plot-size" id="size-md" value="600" checked><label for="size-md">中 (600)</label><input type="radio" name="plot-size" id="size-lg" value="800"><label for="size-lg">大 (800)</label></div></div>
+    <div class="modal-footer"><button class="modal-btn-cancel" id="plot-modal-cancel">取消</button><button class="modal-btn-confirm" id="plot-modal-confirm">绘制图像</button></div>
   </div>
 </div>
-
 <div id="toast"></div>
 
 <script>
 'use strict';
-
-/* ── Wait for KaTeX ── */
-function waitForKatex(cb, tries) {
-  tries = tries || 0;
-  if (typeof katex !== 'undefined') { cb(); return; }
-  if (tries > 50) { cb(); return; }
-  setTimeout(function () { waitForKatex(cb, tries + 1); }, 100);
-}
+function waitForKatex(cb, tries=0) { if (typeof katex !== 'undefined') { cb(); return; } if (tries>50) { cb(); return; } setTimeout(()=>waitForKatex(cb, tries+1),100); }
 waitForKatex(init);
 
 function init() {
-  var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-  var DEBOUNCE_DELAY = isMobile ? 500 : 280;
+  const textarea = document.getElementById('editor-textarea');
+  const previewScroll = document.getElementById('preview-scroll');
+  const previewEmpty = document.getElementById('preview-empty');
+  const statusDot = document.getElementById('status-dot');
+  const statusText = document.getElementById('status-text');
+  const elementCountEl = document.getElementById('status-element-count');
+  const toast = document.getElementById('toast');
+  let toastTimer = null, currentDocumentContainer = null;
 
-  var textarea = document.getElementById('editor-textarea');
-  var previewScroll = document.getElementById('preview-scroll');
-  var previewEmpty = document.getElementById('preview-empty');
-  var statusDot = document.getElementById('status-dot');
-  var statusText = document.getElementById('status-text');
-  var elementCountEl = document.getElementById('status-element-count');
-  var toast = document.getElementById('toast');
+  const setStatus = (msg, type) => { statusText.textContent = msg; statusDot.className = 'status-dot' + (type && type !== 'ok' ? ' ' + type : ''); };
+  const showToast = (msg, dur=2400) => { toast.textContent = msg; toast.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(()=>toast.classList.remove('show'), dur); };
+  const debounce = (fn, delay) => { let t; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn(...args), delay); }; };
 
-  var toastTimer = null;
-  var currentDocumentContainer = null;
+  function renderMarkdownBasic(text) { return text.replace(/[&<>]/g, m=> m==='&'?'&amp;': m==='<'?'&lt;':'&gt;').replace(/^### (.*$)/gm,'<h3>$1</h3>').replace(/^## (.*$)/gm,'<h2>$1</h2>').replace(/^# (.*$)/gm,'<h1>$1</h1>').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/__(.+?)__/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>').replace(/_(.+?)_/g,'<em>$1</em>').replace(/`(.+?)`/g,'<code>$1</code>').replace(/\n/g,'<br>'); }
+  function renderTextWithInlineFormula(text) { let re = /\$([^\$]+?)\$/g, last=0, result='', m; while((m=re.exec(text))!==null){ result+=renderMarkdownBasic(text.substring(last,m.index)); let f=m[1].trim(); try{ result+='<span class="inline-formula">'+katex.renderToString(f,{throwOnError:false,errorColor:'#FF453A',displayMode:false})+'</span>'; }catch(e){ result+='<span class="formula-error">❌ '+e.message+'</span>'; } last=m.index+m[0].length; } result+=renderMarkdownBasic(text.substring(last)); return result; }
+  function parseContent(source) { let blocks=[], re=/\$\$([\s\S]+?)\$\$/g, last=0, m; while((m=re.exec(source))!==null){ if(m.index>last) blocks.push({type:'text',content:source.substring(last,m.index)}); blocks.push({type:'displayFormula',content:m[1].trim()}); last=m.index+m[0].length; } if(last<source.length) blocks.push({type:'text',content:source.substring(last)}); return blocks; }
+  const refreshPreview = debounce(()=>{ let blocks=parseContent(textarea.value); [...previewScroll.children].forEach(c=>{if(c!==previewEmpty) c.remove();}); if(blocks.length===0){ previewEmpty.style.display='flex'; elementCountEl.textContent='0 个元素'; setStatus('就绪'); return; } previewEmpty.style.display='none'; let docContainer=document.createElement('div'); docContainer.className='document-container'; let formulaCount=0,errCount=0,textCount=0; blocks.forEach(block=>{ if(block.type==='text'){ let d=document.createElement('div'); d.className='document-text'; d.innerHTML=renderTextWithInlineFormula(block.content); docContainer.appendChild(d); textCount++; }else{ formulaCount++; let w=document.createElement('div'); w.className='document-formula'; try{ katex.render(block.content,w,{throwOnError:false,errorColor:'#FF453A',displayMode:true}); }catch(e){ errCount++; let ee=document.createElement('div'); ee.className='formula-error'; ee.textContent='渲染错误: '+e.message; w.appendChild(ee); } docContainer.appendChild(w); } }); previewScroll.appendChild(docContainer); currentDocumentContainer=docContainer; elementCountEl.textContent=(textCount+formulaCount)+' 个元素'; setStatus(errCount>0?'渲染完成，'+errCount+'个公式有语法错误':'渲染完成，共 '+formulaCount+' 个公式', errCount>0?'error':'ok'); }, 300);
 
-  /* ── Utilities ── */
-  function setStatus(msg, type) {
-    statusText.textContent = msg;
-    statusDot.className = 'status-dot' + (type && type !== 'ok' ? ' ' + type : '');
-  }
-  function showToast(msg, duration) {
-    duration = duration || 2400;
-    toast.textContent = msg;
-    toast.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(function () { toast.classList.remove('show'); }, duration);
-  }
-  function haptic(pattern) {
-    try { if (navigator.vibrate) navigator.vibrate(pattern || 10); } catch (_) {}
-  }
-  function debounce(fn, delay) {
-    var t;
-    return function () {
-      var args = arguments;
-      clearTimeout(t);
-      t = setTimeout(function () { fn.apply(null, args); }, delay);
-    };
-  }
-
-  /* ─────────────────────────────────────────────
-     RENDER PREVIEW
-  ───────────────────────────────────────────── */
-  function renderMarkdownBasic(text) {
-    var html = text.replace(/[&<>]/g, function(m) {
-      return m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;';
-    });
-    html = html.replace(/^### (.*$)/gm, '<h3>$1</h3>');
-    html = html.replace(/^## (.*$)/gm, '<h2>$1</h2>');
-    html = html.replace(/^# (.*$)/gm, '<h1>$1</h1>');
-    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-    html = html.replace(/__(.+?)__/g, '<strong>$1</strong>');
-    html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
-    html = html.replace(/_(.+?)_/g, '<em>$1</em>');
-    html = html.replace(/`(.+?)`/g, '<code>$1</code>');
-    html = html.replace(/\n/g, '<br>');
-    return html;
-  }
-
-  function renderTextWithInlineFormula(text) {
-    var re = /\$([^\$]+?)\$/g;
-    var last = 0; var result = ''; var m;
-    while ((m = re.exec(text)) !== null) {
-      result += renderMarkdownBasic(text.substring(last, m.index));
-      var f = m[1].trim();
-      try {
-        if (typeof katex !== 'undefined') {
-          result += '<span class="inline-formula">' + katex.renderToString(f, { throwOnError: false, errorColor: '#FF453A', displayMode: false }) + '</span>';
-        } else {
-          result += '<span class="formula-error">$' + f + '$</span>';
-        }
-      } catch (e) { result += '<span class="formula-error">❌ ' + e.message + '</span>'; }
-      last = m.index + m[0].length;
-    }
-    result += renderMarkdownBasic(text.substring(last));
-    return result;
-  }
-
-  function parseContent(source) {
-    var blocks = []; var re = /\$\$([\s\S]+?)\$\$/g;
-    var last = 0; var m;
-    while ((m = re.exec(source)) !== null) {
-      if (m.index > last) blocks.push({ type: 'text', content: source.substring(last, m.index) });
-      blocks.push({ type: 'displayFormula', content: m[1].trim() });
-      last = m.index + m[0].length;
-    }
-    if (last < source.length) blocks.push({ type: 'text', content: source.substring(last) });
-    return blocks;
-  }
-
-  var refreshPreview = debounce(function () {
-    var blocks = parseContent(textarea.value);
-    Array.from(previewScroll.children).forEach(function (c) { if (c !== previewEmpty) c.remove(); });
-
-    if (blocks.length === 0) {
-      previewEmpty.style.display = 'flex';
-      elementCountEl.textContent = '0 个元素';
-      setStatus('就绪');
-      return;
-    }
-    previewEmpty.style.display = 'none';
-
-    var docContainer = document.createElement('div');
-    docContainer.className = 'document-container';
-    var formulaCount = 0; var errCount = 0; var textCount = 0;
-
-    blocks.forEach(function (block) {
-      if (block.type === 'text') {
-        var d = document.createElement('div');
-        d.className = 'document-text';
-        d.innerHTML = renderTextWithInlineFormula(block.content);
-        docContainer.appendChild(d);
-        textCount++;
-      } else {
-        formulaCount++;
-        var w = document.createElement('div');
-        w.className = 'document-formula';
-        try {
-          if (typeof katex !== 'undefined') {
-            katex.render(block.content, w, { throwOnError: false, errorColor: '#FF453A', displayMode: true, output: 'html' });
-          } else { w.textContent = block.content; }
-        } catch (e) {
-          errCount++;
-          var ee = document.createElement('div');
-          ee.className = 'formula-error';
-          ee.textContent = '渲染错误: ' + e.message;
-          w.appendChild(ee);
-        }
-        docContainer.appendChild(w);
-      }
-    });
-
-    previewScroll.appendChild(docContainer);
-    currentDocumentContainer = docContainer;
-    elementCountEl.textContent = (textCount + formulaCount) + ' 个元素';
-    setStatus(errCount > 0 ? '渲染完成，' + errCount + ' 个公式有语法错误' : '渲染完成，共 ' + formulaCount + ' 个公式，' + textCount + ' 段文本', errCount > 0 ? 'error' : 'ok');
-  }, DEBOUNCE_DELAY);
-
-  /* ─────────────────────────────────────────────
-     LATEX → JS CONVERTER
-  ───────────────────────────────────────────── */
-  function latexToJs(latex) {
-    var s = latex.trim();
-
-    // \left \right cleanup
-    s = s.replace(/\\left\s*\(/g, '(').replace(/\\right\s*\)/g, ')');
-    s = s.replace(/\\left\s*\[/g, '(').replace(/\\right\s*\]/g, ')');
-    s = s.replace(/\\left\s*\|([^|]*?)\\right\s*\|/g, 'Math.abs($1)');
-
-    // \frac{a}{b} – iterate for nested
-    for (var fi = 0; fi < 7; fi++) {
-      var prev = s;
-      s = s.replace(/\\frac\{([^{}]*)\}\{([^{}]*)\}/g, '(($1)/($2))');
-      if (s === prev) break;
-    }
-
-    // \sqrt[n]{x}
-    s = s.replace(/\\sqrt\s*\[([^\]]*)\]\s*\{([^{}]*)\}/g, 'Math.pow(($2),(1/($1)))');
-    // \sqrt{x} – iterate
-    for (var si = 0; si < 5; si++) {
-      var prev2 = s;
-      s = s.replace(/\\sqrt\s*\{([^{}]*)\}/g, 'Math.sqrt($1)');
-      if (s === prev2) break;
-    }
-    s = s.replace(/\\sqrt\b/g, 'Math.sqrt');
-
-    // Exponents: x^{n} then x^n
-    s = s.replace(/\^\{([^{}]*)\}/g, '**($1)');
-    s = s.replace(/\^(-?\d+\.?\d*)/g, '**($1)');
-    s = s.replace(/\^([a-zA-Z])/g, '**$1');
-
-    // Subscripts – strip
-    s = s.replace(/\_\{[^{}]*\}/g, '');
-    s = s.replace(/\_[a-zA-Z0-9]/g, '');
-
-    // Inverse trig (before forward trig)
-    s = s.replace(/\\arcsin\b/g, 'Math.asin');
-    s = s.replace(/\\arccos\b/g, 'Math.acos');
-    s = s.replace(/\\arctan\b/g, 'Math.atan');
-
-    // Trig
-    s = s.replace(/\\sin\b/g, 'Math.sin');
-    s = s.replace(/\\cos\b/g, 'Math.cos');
-    s = s.replace(/\\tan\b/g, 'Math.tan');
-
-    // Hyperbolic
-    s = s.replace(/\\sinh\b/g, 'Math.sinh');
-    s = s.replace(/\\cosh\b/g, 'Math.cosh');
-    s = s.replace(/\\tanh\b/g, 'Math.tanh');
-
-    // Log / exp (ln before log)
-    s = s.replace(/\\ln\b/g, 'Math.log');
-    s = s.replace(/\\log\b/g, 'Math.log10');
-    s = s.replace(/\\exp\b/g, 'Math.exp');
-
-    // Other
-    s = s.replace(/\\abs\b/g, 'Math.abs');
-    s = s.replace(/\\max\b/g, 'Math.max');
-    s = s.replace(/\\min\b/g, 'Math.min');
-    s = s.replace(/\\floor\b|\\lfloor\b/g, 'Math.floor');
-    s = s.replace(/\\rfloor\b/g, ')');
-    s = s.replace(/\\ceil\b|\\lceil\b/g, 'Math.ceil');
-    s = s.replace(/\\rceil\b/g, ')');
-    s = s.replace(/\\sign\b/g, 'Math.sign');
-
-    // Constants
-    s = s.replace(/\\pi\b/g, 'Math.PI');
-    s = s.replace(/\\infty\b/g, 'Infinity');
-    s = s.replace(/\\e\b/g, 'Math.E');
-
-    // Remove remaining LaTeX commands
-    s = s.replace(/\\[a-zA-Z]+\*/g, '');
-    s = s.replace(/\\[a-zA-Z]+/g, '');
-
-    // Remove braces
-    s = s.replace(/[{}]/g, '');
-
-    // Implicit multiplication: 2x → 2*x, 2( → 2*(, )( → )*(
-    s = s.replace(/(\d)(x\b)/g, '$1*$2');
-    s = s.replace(/(\d)\(/g, '$1*(');
-    s = s.replace(/\)\(/g, ')*(');
-    s = s.replace(/\)(x\b)/g, ')*$1');
-
-    return s;
-  }
-
-  function createEvaluator(jsExpr) {
-    try {
-      var fn = new Function('x', '"use strict"; try { return ' + jsExpr + '; } catch(e) { return NaN; }');
-      fn(0); // test
-      return { evaluate: fn, valid: true, error: null };
-    } catch (e) {
-      return { evaluate: function() { return NaN; }, valid: false, error: e.message };
-    }
-  }
-
-  /* ─────────────────────────────────────────────
-     PARSE SELECTED FUNCTIONS
-  ───────────────────────────────────────────── */
-  function parseSelectedFunctions(selectedText) {
-    var lines = selectedText.split('\n');
-    var funcs = [];
-    lines.forEach(function (line) {
-      line = line.trim();
-      // Strip $$, $, and spaces
-      line = line.replace(/^\$+|\$+$/g, '').trim();
-      // Match y = f(x) or y=f(x)
-      var m = line.match(/^y\s*=\s*(.+)$/i);
-      if (m) {
-        var latexExpr = m[1].trim();
-        var jsExpr = latexToJs(latexExpr);
-        var ev = createEvaluator(jsExpr);
-        funcs.push({ latex: latexExpr, js: jsExpr, evaluator: ev });
-      }
-    });
-    return funcs;
-  }
-
-  /* ─────────────────────────────────────────────
-     CANVAS PLOTTING
-  ───────────────────────────────────────────── */
-  var PLOT_COLORS = ['#0A84FF', '#FF453A', '#32D74B', '#FF9F0A', '#BF5AF2', '#FF375F', '#40C8E0', '#FF6B35'];
-
-  function niceInterval(range) {
-    if (range <= 0) return 1;
-    var rough = range / 8;
-    var exp = Math.floor(Math.log10(Math.abs(rough)));
-    var frac = rough / Math.pow(10, exp);
-    var nice;
-    if (frac <= 1.2) nice = 1;
-    else if (frac <= 2.5) nice = 2;
-    else if (frac <= 6) nice = 5;
-    else nice = 10;
-    return nice * Math.pow(10, exp);
-  }
-
-  function formatNum(n) {
-    if (n === 0) return '0';
-    if (Number.isInteger(n)) return n.toString();
-    var s = parseFloat(n.toPrecision(4)).toString();
-    return s.length > 8 ? n.toExponential(2) : s;
-  }
-
-  function drawPlot(functions, xMin, xMax, yMin, yMax, canvasSize) {
-    var W = canvasSize, H = canvasSize;
-    var canvas = document.createElement('canvas');
-    var dpr = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width = W * dpr;
-    canvas.height = H * dpr;
-    canvas.style.width = W + 'px';
-    canvas.style.height = H + 'px';
-
-    var ctx = canvas.getContext('2d');
-    ctx.scale(dpr, dpr);
-
-    // Helpers
-    var toCanvasX = function(x) { return (x - xMin) / (xMax - xMin) * W; };
-    var toCanvasY = function(y) { return H - (y - yMin) / (yMax - yMin) * H; };
-
-    // Background
-    ctx.fillStyle = '#1a1a1c';
-    ctx.fillRect(0, 0, W, H);
-
-    // Subtle border
-    ctx.strokeStyle = 'rgba(255,255,255,0.07)';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(0.5, 0.5, W - 1, H - 1);
-
-    var xInterval = niceInterval(xMax - xMin);
-    var yInterval = niceInterval(yMax - yMin);
-
-    // Grid lines
-    ctx.strokeStyle = 'rgba(255,255,255,0.045)';
-    ctx.lineWidth = 0.5;
-
-    var x0 = Math.ceil(xMin / xInterval) * xInterval;
-    for (var gx = x0; gx <= xMax + 1e-9; gx += xInterval) {
-      var cgx = toCanvasX(gx);
-      ctx.beginPath(); ctx.moveTo(cgx, 0); ctx.lineTo(cgx, H); ctx.stroke();
-    }
-    var y0 = Math.ceil(yMin / yInterval) * yInterval;
-    for (var gy = y0; gy <= yMax + 1e-9; gy += yInterval) {
-      var cgy = toCanvasY(gy);
-      ctx.beginPath(); ctx.moveTo(0, cgy); ctx.lineTo(W, cgy); ctx.stroke();
-    }
-
-    // Axis positions (clamped to canvas)
-    var axisX = Math.max(1, Math.min(W - 1, toCanvasX(0)));  // y-axis
-    var axisY = Math.max(1, Math.min(H - 1, toCanvasY(0)));  // x-axis
-
-    // X axis
-    ctx.save();
-    ctx.strokeStyle = 'rgba(255,255,255,0.65)';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath(); ctx.moveTo(0, axisY); ctx.lineTo(W, axisY); ctx.stroke();
-    // X arrow
-    ctx.fillStyle = 'rgba(255,255,255,0.65)';
-    ctx.beginPath();
-    ctx.moveTo(W - 1, axisY);
-    ctx.lineTo(W - 10, axisY - 5);
-    ctx.lineTo(W - 10, axisY + 5);
-    ctx.closePath(); ctx.fill();
-    // X label
-    ctx.fillStyle = 'rgba(255,255,255,0.6)';
-    ctx.font = 'italic 13px Georgia, serif';
-    ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
-    ctx.fillText('x', W - 5, axisY - 7);
-    ctx.restore();
-
-    // Y axis
-    ctx.save();
-    ctx.strokeStyle = 'rgba(255,255,255,0.65)';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath(); ctx.moveTo(axisX, 0); ctx.lineTo(axisX, H); ctx.stroke();
-    // Y arrow
-    ctx.fillStyle = 'rgba(255,255,255,0.65)';
-    ctx.beginPath();
-    ctx.moveTo(axisX, 1);
-    ctx.lineTo(axisX - 5, 12);
-    ctx.lineTo(axisX + 5, 12);
-    ctx.closePath(); ctx.fill();
-    // Y label
-    ctx.fillStyle = 'rgba(255,255,255,0.6)';
-    ctx.font = 'italic 13px Georgia, serif';
-    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-    ctx.fillText('y', axisX + 8, 14);
-    ctx.restore();
-
-    // Ticks & labels
-    ctx.save();
-    ctx.fillStyle = 'rgba(255,255,255,0.42)';
-    ctx.strokeStyle = 'rgba(255,255,255,0.38)';
-    ctx.font = '11px -apple-system, "Noto Sans SC", sans-serif';
-    ctx.lineWidth = 1;
-
-    // X ticks
-    for (var tx = x0; tx <= xMax + 1e-9; tx += xInterval) {
-      var ctxX = toCanvasX(tx);
-      ctx.beginPath(); ctx.moveTo(ctxX, axisY - 5); ctx.lineTo(ctxX, axisY + 5); ctx.stroke();
-      if (Math.abs(tx) > 1e-9) {
-        ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-        var labelY = (axisY + 8 < H - 14) ? axisY + 8 : axisY - 18;
-        ctx.fillText(formatNum(tx), ctxX, labelY);
-      }
-    }
-
-    // Y ticks
-    for (var ty = y0; ty <= yMax + 1e-9; ty += yInterval) {
-      var ctyY = toCanvasY(ty);
-      ctx.beginPath(); ctx.moveTo(axisX - 5, ctyY); ctx.lineTo(axisX + 5, ctyY); ctx.stroke();
-      if (Math.abs(ty) > 1e-9) {
-        ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
-        var labelX = (axisX - 8 > 28) ? axisX - 8 : axisX + 8;
-        ctx.textAlign = labelX < axisX ? 'right' : 'left';
-        ctx.fillText(formatNum(ty), labelX, ctyY);
-      }
-    }
-
-    // Origin label
-    if (xMin < 0 && xMax > 0 && yMin < 0 && yMax > 0) {
-      ctx.textAlign = 'right'; ctx.textBaseline = 'top';
-      ctx.fillText('0', axisX - 5, axisY + 4);
-    }
-    ctx.restore();
-
-    // Plot functions
-    var STEPS = Math.max(W * 2, 1200);
-    var dx = (xMax - xMin) / STEPS;
-    var yRange = yMax - yMin;
-
-    functions.forEach(function (fn, idx) {
-      if (!fn.evaluator.valid) return;
-      var color = PLOT_COLORS[idx % PLOT_COLORS.length];
-      ctx.save();
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 2.2;
-      ctx.lineJoin = 'round';
-      ctx.lineCap = 'round';
-
-      ctx.beginPath();
-      var penDown = false;
-      var prevY = NaN;
-
-      for (var i = 0; i <= STEPS; i++) {
-        var px = xMin + i * dx;
-        var py = fn.evaluator.evaluate(px);
-
-        if (!isFinite(py) || isNaN(py)) {
-          penDown = false;
-          prevY = NaN;
-          continue;
-        }
-
-        // Discontinuity detection
-        if (isFinite(prevY) && Math.abs(py - prevY) > yRange * 3) {
-          penDown = false;
-        }
-
-        var cpx = toCanvasX(px);
-        var cpy = toCanvasY(py);
-
-        // Clip to canvas bounds with margin
-        if (cpy < -H || cpy > H * 2) {
-          penDown = false;
-          prevY = py;
-          continue;
-        }
-
-        if (!penDown) {
-          ctx.moveTo(cpx, cpy);
-          penDown = true;
-        } else {
-          ctx.lineTo(cpx, cpy);
-        }
-        prevY = py;
-      }
-
-      ctx.stroke();
-      ctx.restore();
-    });
-
+  function latexToJs(latex) { let s=latex.trim(); s=s.replace(/\\left\s*\(/g,'(').replace(/\\right\s*\)/g,')').replace(/\\left\s*\[/g,'(').replace(/\\right\s*\]/g,')').replace(/\\left\s*\|([^|]*?)\\right\s*\|/g,'Math.abs($1)'); for(let i=0;i<7;i++){ let prev=s; s=s.replace(/\\frac\{([^{}]*)\}\{([^{}]*)\}/g,'(($1)/($2))'); if(s===prev) break; } s=s.replace(/\\sqrt\s*\[([^\]]*)\]\s*\{([^{}]*)\}/g,'Math.pow(($2),(1/($1)))'); for(let i=0;i<5;i++){ let p=s; s=s.replace(/\\sqrt\s*\{([^{}]*)\}/g,'Math.sqrt($1)'); if(s===p) break; } s=s.replace(/\\sqrt\b/g,'Math.sqrt').replace(/\^\{([^{}]*)\}/g,'**($1)').replace(/\^(-?\d+\.?\d*)/g,'**($1)').replace(/\^([a-zA-Z])/g,'**$1'); s=s.replace(/\_\{[^{}]*\}/g,'').replace(/\_[a-zA-Z0-9]/g,''); s=s.replace(/\\arcsin\b/g,'Math.asin').replace(/\\arccos\b/g,'Math.acos').replace(/\\arctan\b/g,'Math.atan'); s=s.replace(/\\sin\b/g,'Math.sin').replace(/\\cos\b/g,'Math.cos').replace(/\\tan\b/g,'Math.tan'); s=s.replace(/\\sinh\b/g,'Math.sinh').replace(/\\cosh\b/g,'Math.cosh').replace(/\\tanh\b/g,'Math.tanh'); s=s.replace(/\\ln\b/g,'Math.log').replace(/\\log\b/g,'Math.log10').replace(/\\exp\b/g,'Math.exp'); s=s.replace(/\\abs\b/g,'Math.abs').replace(/\\max\b/g,'Math.max').replace(/\\min\b/g,'Math.min'); s=s.replace(/\\pi\b/g,'Math.PI').replace(/\\infty\b/g,'Infinity').replace(/\\e\b/g,'Math.E'); s=s.replace(/\\[a-zA-Z]+\*/g,'').replace(/\\[a-zA-Z]+/g,'').replace(/[{}]/g,''); s=s.replace(/(\d)(x\b)/g,'$1*$2').replace(/(\d)\(/g,'$1*(').replace(/\)\(/g,')*(').replace(/\)(x\b)/g,')*$1'); return s; }
+  function createEvaluator(jsExpr){ try{ let fn=new Function('x','"use strict"; try { return '+jsExpr+'; } catch(e) { return NaN; }'); fn(0); return {evaluate:fn, valid:true, error:null}; }catch(e){ return {evaluate:()=>NaN, valid:false, error:e.message}; } }
+  function parseSelectedFunctions(selectedText){ let lines=selectedText.split('\n'), funcs=[]; lines.forEach(line=>{ line=line.replace(/^\$+|\$+$/g,'').trim(); let m=line.match(/^y\s*=\s*(.+)$/i); if(m){ let latexExpr=m[1].trim(); let jsExpr=latexToJs(latexExpr); let ev=createEvaluator(jsExpr); funcs.push({latex:latexExpr, js:jsExpr, evaluator:ev}); } }); return funcs; }
+  const PLOT_COLORS=['#0A84FF','#FF453A','#32D74B','#FF9F0A','#BF5AF2','#FF375F','#40C8E0','#FF6B35'];
+  function niceInterval(range){ if(range<=0) return 1; let rough=range/8; let exp=Math.floor(Math.log10(Math.abs(rough))); let frac=rough/Math.pow(10,exp); let nice=frac<=1.2?1:frac<=2.5?2:frac<=6?5:10; return nice*Math.pow(10,exp); }
+  function drawPlot(functions, xMin, xMax, yMin, yMax, canvasSize){
+    const W=canvasSize, H=canvasSize, canvas=document.createElement('canvas'), dpr=Math.min(window.devicePixelRatio||1,2.5);
+    canvas.width=W*dpr; canvas.height=H*dpr; canvas.style.width=W+'px'; canvas.style.height=H+'px';
+    let ctx=canvas.getContext('2d'); ctx.scale(dpr,dpr);
+    const toCanvasX=x=>(x-xMin)/(xMax-xMin)*W, toCanvasY=y=>H-(y-yMin)/(yMax-yMin)*H;
+    ctx.fillStyle='#1a1a1c'; ctx.fillRect(0,0,W,H);
+    ctx.strokeStyle='rgba(255,255,255,0.07)'; ctx.lineWidth=1; ctx.strokeRect(0.5,0.5,W-1,H-1);
+    let xInterval=niceInterval(xMax-xMin), yInterval=niceInterval(yMax-yMin);
+    ctx.strokeStyle='rgba(255,255,255,0.045)'; ctx.lineWidth=0.5;
+    let x0=Math.ceil(xMin/xInterval)*xInterval; for(let gx=x0; gx<=xMax+1e-9; gx+=xInterval){ let cx=toCanvasX(gx); ctx.beginPath(); ctx.moveTo(cx,0); ctx.lineTo(cx,H); ctx.stroke(); }
+    let y0=Math.ceil(yMin/yInterval)*yInterval; for(let gy=y0; gy<=yMax+1e-9; gy+=yInterval){ let cy=toCanvasY(gy); ctx.beginPath(); ctx.moveTo(0,cy); ctx.lineTo(W,cy); ctx.stroke(); }
+    let axisX=Math.max(1,Math.min(W-1,toCanvasX(0))), axisY=Math.max(1,Math.min(H-1,toCanvasY(0)));
+    ctx.save(); ctx.strokeStyle='rgba(255,255,255,0.75)'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(0,axisY); ctx.lineTo(W,axisY); ctx.stroke();
+    ctx.fillStyle='rgba(255,255,255,0.7)'; ctx.beginPath(); ctx.moveTo(W-1,axisY); ctx.lineTo(W-10,axisY-5); ctx.lineTo(W-10,axisY+5); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,0.7)'; ctx.font='italic 13px Georgia, serif'; ctx.textAlign='center'; ctx.textBaseline='bottom'; ctx.fillText('x',W-5,axisY-7);
+    ctx.beginPath(); ctx.moveTo(axisX,0); ctx.lineTo(axisX,H); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(axisX,1); ctx.lineTo(axisX-5,12); ctx.lineTo(axisX+5,12); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,0.7)'; ctx.font='italic 13px Georgia, serif'; ctx.textAlign='left'; ctx.textBaseline='middle'; ctx.fillText('y',axisX+8,14);
+    ctx.fillStyle='rgba(255,255,255,0.55)'; ctx.font='11px -apple-system, "Noto Sans SC", sans-serif'; ctx.strokeStyle='rgba(255,255,255,0.4)'; ctx.lineWidth=1;
+    for(let tx=x0; tx<=xMax+1e-9; tx+=xInterval){ let cx=toCanvasX(tx); ctx.beginPath(); ctx.moveTo(cx,axisY-5); ctx.lineTo(cx,axisY+5); ctx.stroke(); if(Math.abs(tx)>1e-9){ ctx.textAlign='center'; ctx.textBaseline='top'; let labelY=(axisY+8<H-14)?axisY+8:axisY-18; ctx.fillText(tx===0?'0':(Number.isInteger(tx)?tx.toString():tx.toPrecision(4)), cx, labelY); } }
+    for(let ty=y0; ty<=yMax+1e-9; ty+=yInterval){ let cy=toCanvasY(ty); ctx.beginPath(); ctx.moveTo(axisX-5,cy); ctx.lineTo(axisX+5,cy); ctx.stroke(); if(Math.abs(ty)>1e-9){ ctx.textAlign=axisX-8>28?'right':'left'; ctx.textBaseline='middle'; let labelX=(axisX-8>28)?axisX-8:axisX+8; ctx.fillText(Number.isInteger(ty)?ty.toString():ty.toPrecision(4), labelX, cy); } }
+    if(xMin<0 && xMax>0 && yMin<0 && yMax>0){ ctx.textAlign='right'; ctx.textBaseline='top'; ctx.fillText('0',axisX-5,axisY+4); } ctx.restore();
+    let STEPS=Math.max(W*2.5,1800), dx=(xMax-xMin)/STEPS, yRange=yMax-yMin;
+    functions.forEach((fn,idx)=>{ if(!fn.evaluator.valid) return; let color=PLOT_COLORS[idx%PLOT_COLORS.length]; ctx.save(); ctx.strokeStyle=color; ctx.lineWidth=2.2; ctx.lineJoin='round'; ctx.beginPath(); let penDown=false, prevY=NaN; for(let i=0;i<=STEPS;i++){ let px=xMin+i*dx, py=fn.evaluator.evaluate(px); if(!isFinite(py)||isNaN(py)){ penDown=false; prevY=NaN; continue; } if(isFinite(prevY)&&Math.abs(py-prevY)>yRange*3){ penDown=false; } let cpx=toCanvasX(px), cpy=toCanvasY(py); if(cpy<-H||cpy>H*2){ penDown=false; prevY=py; continue; } if(!penDown){ ctx.moveTo(cpx,cpy); penDown=true; }else{ ctx.lineTo(cpx,cpy); } prevY=py; } ctx.stroke(); ctx.restore(); });
     return canvas;
   }
 
-  /* ─────────────────────────────────────────────
-     PLOT MODAL
-  ───────────────────────────────────────────── */
-  var plotModalOverlay = document.getElementById('plot-modal-overlay');
-  var plotFunctionsList = document.getElementById('plot-functions-list');
-  var plotModalConfirm = document.getElementById('plot-modal-confirm');
-  var currentFunctions = [];
+  let plotModalOverlay=document.getElementById('plot-modal-overlay'), currentFunctions=[];
+  function openPlotModal(){ let sel=textarea.value.substring(textarea.selectionStart,textarea.selectionEnd).trim(); if(!sel){ showToast('请先选中包含 y = f(x) 的文本'); return; } currentFunctions=parseSelectedFunctions(sel); let listDiv=document.getElementById('plot-functions-list'); listDiv.innerHTML=''; if(currentFunctions.length===0){ let nd=document.createElement('div'); nd.className='fn-no-funcs'; nd.textContent='未找到 y = f(x) 格式的函数'; listDiv.appendChild(nd); document.getElementById('plot-modal-confirm').disabled=true; }else{ document.getElementById('plot-modal-confirm').disabled=false; currentFunctions.forEach((fn,idx)=>{ let chip=document.createElement('div'); chip.className='fn-chip'; let dot=document.createElement('span'); dot.className='fn-color-dot'; dot.style.background=PLOT_COLORS[idx%PLOT_COLORS.length]; let expr=document.createElement('span'); expr.className='fn-expr'; expr.textContent='y = '+fn.latex; chip.appendChild(dot); chip.appendChild(expr); if(!fn.evaluator.valid){ let errSpan=document.createElement('span'); errSpan.className='fn-error'; errSpan.textContent='⚠ 解析失败'; chip.appendChild(errSpan); } listDiv.appendChild(chip); }); } plotModalOverlay.classList.add('visible'); }
+  function closePlotModal(){ plotModalOverlay.classList.remove('visible'); }
+  function executePlot(){ let xMin=parseFloat(document.getElementById('plot-xmin').value), xMax=parseFloat(document.getElementById('plot-xmax').value), yMin=parseFloat(document.getElementById('plot-ymin').value), yMax=parseFloat(document.getElementById('plot-ymax').value), sizeEl=document.querySelector('input[name="plot-size"]:checked'), size=sizeEl?parseInt(sizeEl.value):600; if(isNaN(xMin)||isNaN(xMax)||isNaN(yMin)||isNaN(yMax)||xMin>=xMax||yMin>=yMax){ showToast('请检查范围设置'); return; } let validFns=currentFunctions.filter(f=>f.evaluator.valid); if(validFns.length===0){ showToast('没有可绘制的有效函数'); return; } closePlotModal(); setTimeout(()=>{ let canvas=drawPlot(validFns,xMin,xMax,yMin,yMax,size); let block=document.createElement('div'); block.className='plot-output-block'; let header=document.createElement('div'); header.className='plot-output-header'; let title=document.createElement('span'); title.className='plot-output-title'; title.textContent='函数图像'; let meta=document.createElement('span'); meta.className='plot-output-meta'; meta.textContent=`x ∈ [${xMin}, ${xMax}]  y ∈ [${yMin}, ${yMax}]`; header.append(title,meta); let wrapper=document.createElement('div'); wrapper.className='plot-canvas-wrapper'; wrapper.appendChild(canvas); let legend=document.createElement('div'); legend.className='plot-legend'; validFns.forEach((fn,idx)=>{ let item=document.createElement('span'); item.className='legend-item'; let dot=document.createElement('span'); dot.className='legend-dot'; dot.style.background=PLOT_COLORS[idx%PLOT_COLORS.length]; item.appendChild(dot); item.appendChild(document.createTextNode(' y = '+fn.latex)); legend.appendChild(item); }); block.append(header,wrapper,legend); previewScroll.appendChild(block); block.scrollIntoView({behavior:'smooth',block:'nearest'}); showToast(`绘制了 ${validFns.length} 个函数`); },200); }
+  document.getElementById('plot-modal-close').addEventListener('click',closePlotModal);
+  document.getElementById('plot-modal-cancel').addEventListener('click',closePlotModal);
+  document.getElementById('plot-modal-confirm').addEventListener('click',executePlot);
+  plotModalOverlay.addEventListener('click',e=>{if(e.target===plotModalOverlay) closePlotModal();});
 
-  function openPlotModal() {
-    var sel = textarea.value.substring(textarea.selectionStart, textarea.selectionEnd).trim();
-    if (!sel) {
-      showToast('请先选中包含 y = f(x) 的文本');
-      haptic([10, 30, 10]);
-      return;
-    }
+  function smartConvert(text){ let t=text.replace(/([a-zA-Z])(\d+)/g,'$1^{$2}').replace(/([a-zA-Z])_([a-zA-Z0-9]+)/g,'$1_{$2}'); let greek={alpha:'\\alpha',beta:'\\beta',gamma:'\\gamma',delta:'\\delta',epsilon:'\\epsilon',zeta:'\\zeta',eta:'\\eta',theta:'\\theta',lambda:'\\lambda',mu:'\\mu',pi:'\\pi',sigma:'\\sigma',phi:'\\phi',omega:'\\omega'}; t=t.replace(new RegExp('\\b('+Object.keys(greek).join('|')+')\\b','g'),m=>greek[m]||m); t=t.replace(/([^\s]+)\s+\/\s+([^\s]+)/g,'\\frac{$1}{$2}'); return '$$'+t+'$$'; }
+  function applySmartConvert(){ let start=textarea.selectionStart,end=textarea.selectionEnd; if(start===end){ showToast('请先选中要转换的文本'); return; } let selected=textarea.value.substring(start,end); let converted=smartConvert(selected); textarea.value=textarea.value.substring(0,start)+converted+textarea.value.substring(end); textarea.setSelectionRange(start+converted.length,start+converted.length); textarea.focus(); showToast('智能转换完成'); refreshPreview(); }
 
-    currentFunctions = parseSelectedFunctions(sel);
+  async function exportPreviewAsImage(){ if(!currentDocumentContainer){ showToast('没有可导出的内容'); return; } try{ setStatus('导出图片...','working'); let temp=document.createElement('div'); temp.style.cssText='background:#fff;padding:40px;display:inline-block;'; let clone=currentDocumentContainer.cloneNode(true); clone.style.cssText='background:#fff;color:#000;box-shadow:none;'; clone.querySelectorAll('.document-text, .katex').forEach(el=>el.style.color='#000'); temp.appendChild(clone); document.body.appendChild(temp); let dataUrl=await htmlToImage.toPng(temp,{backgroundColor:'#fff',pixelRatio:3.5,quality:1}); document.body.removeChild(temp); let a=document.createElement('a'); a.href=dataUrl; a.download='latex_'+new Date().toISOString().slice(0,19).replace(/:/g,'-')+'.png'; a.click(); setStatus('导出成功'); showToast('图片已下载'); }catch(e){ setStatus('导出失败','error'); showToast('导出失败'); } }
+  async function exportAsPDF(){ if(!currentDocumentContainer){ showToast('没有可导出的内容'); return; } setStatus('准备PDF...','working'); try{ let clone=currentDocumentContainer.cloneNode(true); clone.style.cssText='background:#fff;color:#000;padding:32px 40px;'; let wrapper=document.createElement('div'); wrapper.style.cssText='position:absolute;top:-9999px;left:-9999px;background:#fff;width:800px;padding:20px;'; wrapper.appendChild(clone); document.body.appendChild(wrapper); await new Promise(r=>setTimeout(r,300)); let opt={margin:[0.5,0.5,0.5,0.5],filename:'latex_'+new Date().toISOString().slice(0,10)+'.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2.5,backgroundColor:'#fff'},jsPDF:{unit:'in',format:'a4',orientation:'portrait'}}; let pdfBlob=await html2pdf().set(opt).from(wrapper).outputPdf('blob'); document.body.removeChild(wrapper); let url=URL.createObjectURL(pdfBlob); let a=document.createElement('a'); a.href=url; a.download='latex_document.pdf'; a.click(); setTimeout(()=>{ URL.revokeObjectURL(url); },200); setStatus('PDF已下载'); showToast('PDF已下载'); }catch(e){ setStatus('PDF导出失败','error'); showToast('PDF生成失败'); } }
 
-    // Render function chips
-    plotFunctionsList.innerHTML = '';
-    if (currentFunctions.length === 0) {
-      var noFn = document.createElement('div');
-      noFn.className = 'fn-no-funcs';
-      noFn.textContent = '未找到 y = f(x) 格式的函数，请确认选中的文本包含该格式';
-      plotFunctionsList.appendChild(noFn);
-      plotModalConfirm.disabled = true;
-    } else {
-      plotModalConfirm.disabled = false;
-      currentFunctions.forEach(function (fn, idx) {
-        var chip = document.createElement('div');
-        chip.className = 'fn-chip';
-        var dot = document.createElement('span');
-        dot.className = 'fn-color-dot';
-        dot.style.background = PLOT_COLORS[idx % PLOT_COLORS.length];
-        dot.style.boxShadow = '0 0 6px ' + PLOT_COLORS[idx % PLOT_COLORS.length] + '80';
-        var expr = document.createElement('span');
-        expr.className = 'fn-expr';
-        expr.textContent = 'y = ' + fn.latex;
-        chip.appendChild(dot);
-        chip.appendChild(expr);
-        if (!fn.evaluator.valid) {
-          var err = document.createElement('span');
-          err.className = 'fn-error';
-          err.textContent = '⚠ 解析失败';
-          chip.appendChild(err);
-        }
-        plotFunctionsList.appendChild(chip);
-      });
-    }
+  document.getElementById('btn-new').addEventListener('click',()=>{ textarea.value=''; refreshPreview(); showToast('新建文档'); });
+  document.getElementById('btn-open').addEventListener('click',()=>document.getElementById('file-input').click());
+  document.getElementById('btn-save').addEventListener('click',()=>{ let blob=new Blob([textarea.value],{type:'text/plain'}); saveAs(blob,'document.tex'); showToast('已保存'); });
+  document.getElementById('btn-export-preview').addEventListener('click',exportPreviewAsImage);
+  document.getElementById('btn-export-pdf').addEventListener('click',exportAsPDF);
+  document.getElementById('btn-smart-convert').addEventListener('click',applySmartConvert);
+  document.getElementById('btn-plot').addEventListener('click',openPlotModal);
+  document.getElementById('btn-plot-pane').addEventListener('click',openPlotModal);
+  document.getElementById('file-input').addEventListener('change',e=>{ let f=e.target.files[0]; if(f){ let r=new FileReader(); r.onload=ev=>{ textarea.value=ev.target.result; refreshPreview(); showToast(f.name); }; r.readAsText(f,'utf-8'); } e.target.value=''; });
+  textarea.addEventListener('input',refreshPreview);
+  document.addEventListener('keydown',e=>{ let mod=e.ctrlKey||e.metaKey; if(!mod) return; if(e.key.toLowerCase()==='k'){ e.preventDefault(); applySmartConvert(); }else if(e.key.toLowerCase()==='p'){ e.preventDefault(); openPlotModal(); }else if(e.key.toLowerCase()==='n'){ e.preventDefault(); textarea.value=''; refreshPreview(); }else if(e.key.toLowerCase()==='o'){ e.preventDefault(); document.getElementById('file-input').click(); }else if(e.key.toLowerCase()==='s'){ e.preventDefault(); let blob=new Blob([textarea.value],{type:'text/plain'}); saveAs(blob,'document.tex'); showToast('已保存'); } });
+  let resizer=document.getElementById('resizer'), editorPane=document.getElementById('editor-pane'), mainEl=document.getElementById('main'), isResizing=false; resizer.addEventListener('mousedown',e=>{ isResizing=true; resizer.classList.add('dragging'); e.preventDefault(); }); document.addEventListener('mousemove',e=>{ if(!isResizing) return; let rect=mainEl.getBoundingClientRect(); let w=Math.max(280,Math.min(e.clientX-rect.left,rect.width-280)); editorPane.style.width=w+'px'; }); document.addEventListener('mouseup',()=>{ if(isResizing){ isResizing=false; resizer.classList.remove('dragging'); } });
 
-    // Auto-range based on functions
-    autoRangeFromFunctions(currentFunctions);
-
-    // Show modal
-    plotModalOverlay.classList.remove('closing');
-    plotModalOverlay.classList.add('visible');
-    haptic(10);
-  }
-
-  function autoRangeFromFunctions(fns) {
-    // Default range
-    var xMin = -10, xMax = 10, yMin = -10, yMax = 10;
-    document.getElementById('plot-xmin').value = xMin;
-    document.getElementById('plot-xmax').value = xMax;
-    document.getElementById('plot-ymin').value = yMin;
-    document.getElementById('plot-ymax').value = yMax;
-  }
-
-  function closePlotModal() {
-    plotModalOverlay.classList.add('closing');
-    setTimeout(function () {
-      plotModalOverlay.classList.remove('visible');
-      plotModalOverlay.classList.remove('closing');
-    }, 220);
-  }
-
-  function executePlot() {
-    var xMin = parseFloat(document.getElementById('plot-xmin').value);
-    var xMax = parseFloat(document.getElementById('plot-xmax').value);
-    var yMin = parseFloat(document.getElementById('plot-ymin').value);
-    var yMax = parseFloat(document.getElementById('plot-ymax').value);
-    var sizeEl = document.querySelector('input[name="plot-size"]:checked');
-    var size = sizeEl ? parseInt(sizeEl.value) : 600;
-
-    if (isNaN(xMin) || isNaN(xMax) || isNaN(yMin) || isNaN(yMax) || xMin >= xMax || yMin >= yMax) {
-      showToast('⚠ 请检查范围设置（最小值需小于最大值）');
-      return;
-    }
-
-    var validFns = currentFunctions.filter(function (f) { return f.evaluator.valid; });
-    if (validFns.length === 0) {
-      showToast('⚠ 没有可绘制的有效函数');
-      return;
-    }
-
-    closePlotModal();
-    haptic(15);
-
-    setTimeout(function () {
-      var canvas = drawPlot(validFns, xMin, xMax, yMin, yMax, size);
-
-      // Build plot output block
-      var block = document.createElement('div');
-      block.className = 'plot-output-block';
-
-      var header = document.createElement('div');
-      header.className = 'plot-output-header';
-      var title = document.createElement('span');
-      title.className = 'plot-output-title';
-      title.textContent = '📈 函数图像';
-      var meta = document.createElement('span');
-      meta.className = 'plot-output-meta';
-      meta.textContent = 'x ∈ [' + xMin + ', ' + xMax + ']  y ∈ [' + yMin + ', ' + yMax + ']';
-      header.appendChild(title);
-      header.appendChild(meta);
-
-      var wrapper = document.createElement('div');
-      wrapper.className = 'plot-canvas-wrapper';
-      wrapper.appendChild(canvas);
-
-      var legend = document.createElement('div');
-      legend.className = 'plot-legend';
-      validFns.forEach(function (fn, idx) {
-        var item = document.createElement('span');
-        item.className = 'legend-item';
-        var dot = document.createElement('span');
-        dot.className = 'legend-dot';
-        dot.style.background = PLOT_COLORS[idx % PLOT_COLORS.length];
-        var txt = document.createTextNode('y = ' + fn.latex);
-        item.appendChild(dot);
-        item.appendChild(txt);
-        legend.appendChild(item);
-      });
-
-      block.appendChild(header);
-      block.appendChild(wrapper);
-      block.appendChild(legend);
-
-      // Append to preview scroll (after existing content)
-      previewScroll.appendChild(block);
-      block.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-
-      showToast('✅ 绘制了 ' + validFns.length + ' 个函数');
-      setStatus('图像绘制完成 — ' + validFns.length + ' 个函数');
-    }, 250);
-  }
-
-  // Modal events
-  document.getElementById('plot-modal-close').addEventListener('click', closePlotModal);
-  document.getElementById('plot-modal-cancel').addEventListener('click', closePlotModal);
-  document.getElementById('plot-modal-confirm').addEventListener('click', executePlot);
-  plotModalOverlay.addEventListener('click', function (e) {
-    if (e.target === plotModalOverlay) closePlotModal();
-  });
-
-  /* ─────────────────────────────────────────────
-     SMART CONVERT
-  ───────────────────────────────────────────── */
-  var GREEK_MAP = {
-    alpha:'\\alpha', beta:'\\beta', gamma:'\\gamma', delta:'\\delta',
-    epsilon:'\\epsilon', zeta:'\\zeta', eta:'\\eta', theta:'\\theta',
-    iota:'\\iota', kappa:'\\kappa', lambda:'\\lambda', mu:'\\mu',
-    nu:'\\nu', xi:'\\xi', pi:'\\pi', rho:'\\rho', sigma:'\\sigma',
-    tau:'\\tau', upsilon:'\\upsilon', phi:'\\phi', chi:'\\chi',
-    psi:'\\psi', omega:'\\omega',
-  };
-  function smartConvert(text) {
-    var t = text;
-    t = t.replace(/([a-zA-Z])(\d+)/g, '$1^{$2}');
-    t = t.replace(/([a-zA-Z])_([a-zA-Z0-9]+)/g, '$1_{$2}');
-    var greekRe = new RegExp('\\b(' + Object.keys(GREEK_MAP).join('|') + ')\\b', 'g');
-    t = t.replace(greekRe, function (m) { return GREEK_MAP[m] || m; });
-    t = t.replace(/([^\s]+)\s+\/\s+([^\s]+)/g, '\\frac{$1}{$2}');
-    return '$$' + t + '$$';
-  }
-  function applySmartConvert() {
-    var start = textarea.selectionStart, end = textarea.selectionEnd;
-    if (start === end) { showToast('请先选中要转换的文本'); haptic([10,30,10]); return; }
-    var selected = textarea.value.substring(start, end);
-    var converted = smartConvert(selected);
-    textarea.value = textarea.value.substring(0, start) + converted + textarea.value.substring(end);
-    textarea.setSelectionRange(start + converted.length, start + converted.length);
-    textarea.focus(); haptic(12); showToast('✨ 智能转换完成'); refreshPreview();
-  }
-
-  /* ─────────────────────────────────────────────
-     EXPORT
-  ───────────────────────────────────────────── */
-  async function exportPreviewAsImage() {
-    if (!currentDocumentContainer) { showToast('没有可导出的内容'); return; }
-    if (typeof htmlToImage === 'undefined') { showToast('⚠ html-to-image 未加载'); return; }
-    try {
-      setStatus('正在导出图片...', 'working');
-      var temp = document.createElement('div');
-      temp.style.cssText = 'background:#fff;padding:40px;display:inline-block;';
-      var clone = currentDocumentContainer.cloneNode(true);
-      clone.style.cssText = 'background:#fff;color:#000;box-shadow:none;';
-      clone.querySelectorAll('.document-text, .katex').forEach(function(el) { el.style.color='#000'; });
-      temp.appendChild(clone);
-      document.body.appendChild(temp);
-      var dataUrl = await htmlToImage.toPng(temp, { backgroundColor:'#fff', pixelRatio: 3, quality: 1.0 });
-      document.body.removeChild(temp);
-      var a = document.createElement('a');
-      a.href = dataUrl;
-      a.download = 'latex_' + new Date().toISOString().slice(0,19).replace(/:/g,'-') + '.png';
-      a.click();
-      setStatus('导出成功'); showToast('✅ 图片已下载');
-    } catch (e) { setStatus('导出失败','error'); showToast('⚠ 导出失败'); }
-  }
-
-  async function exportAsPDF() {
-    if (!currentDocumentContainer) { showToast('没有可导出的内容'); return; }
-    if (typeof html2pdf === 'undefined') { showToast('⚠ html2pdf 未加载'); return; }
-    setStatus('正在准备PDF...','working');
-    showToast('📄 正在生成 PDF，请稍候...', 2000);
-    try {
-      var clone = currentDocumentContainer.cloneNode(true);
-      clone.style.cssText = 'background:#fff;color:#000;padding:32px 40px;border-radius:0;box-shadow:none;';
-      clone.querySelectorAll('.document-text,.katex,.document-formula').forEach(function(el){ el.style.color='#000'; });
-      var wrapper = document.createElement('div');
-      wrapper.style.cssText = 'position:absolute;top:-9999px;left:-9999px;background:#fff;width:800px;padding:20px;';
-      wrapper.appendChild(clone);
-      document.body.appendChild(wrapper);
-      await new Promise(function(r){ setTimeout(r,300); });
-      var opt = { margin:[0.5,0.5,0.5,0.5], filename:'latex_'+new Date().toISOString().slice(0,10)+'.pdf', image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2.5,backgroundColor:'#fff',useCORS:true,logging:false}, jsPDF:{unit:'in',format:'a4',orientation:'portrait'} };
-      var pdfBlob = await html2pdf().set(opt).from(wrapper).outputPdf('blob');
-      document.body.removeChild(wrapper);
-      if (navigator.canShare && navigator.canShare({ files:[new File([pdfBlob],'doc.pdf',{type:'application/pdf'})] })) {
-        await navigator.share({ title:'LaTeX 文档', files:[new File([pdfBlob],'latex_document.pdf',{type:'application/pdf'})] });
-        setStatus('PDF 已分享'); showToast('✅ 分享完成');
-      } else {
-        var url = URL.createObjectURL(pdfBlob);
-        var a = document.createElement('a'); a.href=url; a.download='latex_document.pdf';
-        document.body.appendChild(a); a.click();
-        setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(url); },200);
-        setStatus('PDF 已下载'); showToast('📄 PDF 已下载');
-      }
-    } catch(e) { setStatus('PDF导出失败','error'); showToast('❌ PDF 生成失败'); }
-  }
-
-  /* ─────────────────────────────────────────────
-     FILE OPS
-  ───────────────────────────────────────────── */
-  function newDocument() { textarea.value = ''; refreshPreview(); showToast('📄 新建文档'); }
-  function openFile() { document.getElementById('file-input').click(); }
-  function handleFileOpen(e) {
-    var file = e.target.files[0]; if (!file) return;
-    var reader = new FileReader();
-    reader.onload = function(ev) { textarea.value = ev.target.result; refreshPreview(); showToast('📂 ' + file.name); };
-    reader.readAsText(file,'utf-8'); e.target.value = '';
-  }
-  function saveFile() {
-    var blob = new Blob([textarea.value],{type:'text/plain;charset=utf-8'});
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a'); a.href=url; a.download='document.tex'; a.click();
-    setTimeout(function(){ URL.revokeObjectURL(url); },100);
-    showToast('💾 已保存');
-  }
-
-  /* ─────────────────────────────────────────────
-     RESIZER
-  ───────────────────────────────────────────── */
-  var resizer = document.getElementById('resizer');
-  var editorPane = document.getElementById('editor-pane');
-  var mainEl = document.getElementById('main');
-  var isResizing = false;
-  resizer.addEventListener('mousedown', function(e) {
-    isResizing = true; resizer.classList.add('dragging');
-    e.preventDefault();
-  });
-  document.addEventListener('mousemove', function(e) {
-    if (!isResizing) return;
-    var rect = mainEl.getBoundingClientRect();
-    var w = Math.max(280, Math.min(e.clientX - rect.left, rect.width - 280));
-    editorPane.style.width = w + 'px';
-  });
-  document.addEventListener('mouseup', function() {
-    if (isResizing) { isResizing = false; resizer.classList.remove('dragging'); }
-  });
-
-  /* ─────────────────────────────────────────────
-     EVENT LISTENERS
-  ───────────────────────────────────────────── */
-  document.getElementById('btn-new').addEventListener('click', newDocument);
-  document.getElementById('btn-open').addEventListener('click', openFile);
-  document.getElementById('btn-save').addEventListener('click', saveFile);
-  document.getElementById('btn-export-preview').addEventListener('click', exportPreviewAsImage);
-  document.getElementById('btn-export-pdf').addEventListener('click', exportAsPDF);
-  document.getElementById('btn-smart-convert').addEventListener('click', applySmartConvert);
-  document.getElementById('btn-plot').addEventListener('click', openPlotModal);
-  document.getElementById('btn-plot-pane').addEventListener('click', openPlotModal);
-  document.getElementById('file-input').addEventListener('change', handleFileOpen);
-  textarea.addEventListener('input', refreshPreview);
-
-  document.addEventListener('keydown', function (e) {
-    var mod = e.ctrlKey || e.metaKey;
-    if (!mod) return;
-    switch (e.key.toLowerCase()) {
-      case 'k': e.preventDefault(); applySmartConvert(); break;
-      case 'p': e.preventDefault(); openPlotModal(); break;
-      case 'n': e.preventDefault(); newDocument(); break;
-      case 'o': e.preventDefault(); openFile(); break;
-      case 's': e.preventDefault(); saveFile(); break;
-    }
-  });
-
-  /* ─────────────────────────────────────────────
-     DEMO CONTENT
-  ───────────────────────────────────────────── */
-  var DEMO = '# LaTeX Editor with Function Plotter\n\n' +
-    '欢迎使用增强版编辑器。支持行内公式 $e^{i\\pi} + 1 = 0$ 和独立公式块。\n\n' +
-    '$$\\int_{-\\infty}^{\\infty} e^{-x^2} dx = \\sqrt{\\pi}$$\n\n' +
-    '## 绘图功能 📈\n\n' +
-    '选中下方一行或多行，按 **⌘P**（或点击"绘图"按钮）即可绘制：\n\n' +
-    'y = x^2\n' +
-    'y = \\sin(x)\n' +
-    'y = \\frac{1}{x}\n\n' +
-    '> 提示：可多选几行同时绘制到同一坐标系。\n\n' +
-    '## 智能转换\n\n' +
-    '选中 `x2 + sin(x)` 再按 **⌘K** 可自动转换为 LaTeX 公式。';
-
-  textarea.value = DEMO;
-  refreshPreview();
-  setStatus('就绪 — 使用 ⌘P 绘制函数图像 · ⌘K 智能转换');
+  const DEMO='# LaTeX Editor with Function Plotter\n\n欢迎使用增强版编辑器。支持行内公式 $e^{i\\pi} + 1 = 0$ 和独立公式块。\n\n$$\\int_{-\\infty}^{\\infty} e^{-x^2} dx = \\sqrt{\\pi}$$\n\n## 绘图功能\n\n选中下方一行或多行，按 **Ctrl+P**（或点击"绘图"按钮）即可绘制：\n\ny = x^2\ny = \\sin(x)\ny = \\frac{1}{x}\n\n提示：可多选几行同时绘制到同一坐标系。\n\n## 智能转换\n\n选中 `x2 + sin(x)` 再按 **Ctrl+K** 可自动转换为 LaTeX 公式。';
+  textarea.value=DEMO; refreshPreview(); setStatus('就绪 — 使用 Ctrl+P 绘制函数图像 · Ctrl+K 智能转换');
 }
 </script>
 </body>
