@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover" />
-<title>LaTeX Editor | 公式编辑与函数绘图</title>
+<title>LaTeX Editor | 高级公式编辑与函数绘图 (交点+清晰刻度)</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -255,6 +255,20 @@ kbd {
   width: 10px; height: 10px; border-radius: 50%;
   flex-shrink: 0;
 }
+.intersections-list {
+  margin-top: 12px;
+  border-top: 0.5px solid rgba(255,255,255,0.08);
+  padding: 10px 14px 12px;
+  font-size: 11px;
+  font-family: var(--font-editor);
+  background: rgba(0,0,0,0.2);
+}
+.intersections-title {
+  font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; letter-spacing: 0.5px;
+}
+.intersection-item {
+  color: #FFD966; font-family: monospace; font-size: 11px; margin-bottom: 3px;
+}
 
 #statusbar {
   display: flex; align-items: center; gap: 10px;
@@ -282,7 +296,7 @@ kbd {
 }
 #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-/* Plot Modal Apple Style */
+/* Plot Modal */
 #plot-modal-overlay {
   position: fixed; inset: 0; z-index: 500;
   display: flex; align-items: center; justify-content: center;
@@ -434,43 +448,81 @@ function init() {
   function parseContent(source) { let blocks=[], re=/\$\$([\s\S]+?)\$\$/g, last=0, m; while((m=re.exec(source))!==null){ if(m.index>last) blocks.push({type:'text',content:source.substring(last,m.index)}); blocks.push({type:'displayFormula',content:m[1].trim()}); last=m.index+m[0].length; } if(last<source.length) blocks.push({type:'text',content:source.substring(last)}); return blocks; }
   const refreshPreview = debounce(()=>{ let blocks=parseContent(textarea.value); [...previewScroll.children].forEach(c=>{if(c!==previewEmpty) c.remove();}); if(blocks.length===0){ previewEmpty.style.display='flex'; elementCountEl.textContent='0 个元素'; setStatus('就绪'); return; } previewEmpty.style.display='none'; let docContainer=document.createElement('div'); docContainer.className='document-container'; let formulaCount=0,errCount=0,textCount=0; blocks.forEach(block=>{ if(block.type==='text'){ let d=document.createElement('div'); d.className='document-text'; d.innerHTML=renderTextWithInlineFormula(block.content); docContainer.appendChild(d); textCount++; }else{ formulaCount++; let w=document.createElement('div'); w.className='document-formula'; try{ katex.render(block.content,w,{throwOnError:false,errorColor:'#FF453A',displayMode:true}); }catch(e){ errCount++; let ee=document.createElement('div'); ee.className='formula-error'; ee.textContent='渲染错误: '+e.message; w.appendChild(ee); } docContainer.appendChild(w); } }); previewScroll.appendChild(docContainer); currentDocumentContainer=docContainer; elementCountEl.textContent=(textCount+formulaCount)+' 个元素'; setStatus(errCount>0?'渲染完成，'+errCount+'个公式有语法错误':'渲染完成，共 '+formulaCount+' 个公式', errCount>0?'error':'ok'); }, 300);
 
-  function latexToJs(latex) { let s=latex.trim(); s=s.replace(/\\left\s*\(/g,'(').replace(/\\right\s*\)/g,')').replace(/\\left\s*\[/g,'(').replace(/\\right\s*\]/g,')').replace(/\\left\s*\|([^|]*?)\\right\s*\|/g,'Math.abs($1)'); for(let i=0;i<7;i++){ let prev=s; s=s.replace(/\\frac\{([^{}]*)\}\{([^{}]*)\}/g,'(($1)/($2))'); if(s===prev) break; } s=s.replace(/\\sqrt\s*\[([^\]]*)\]\s*\{([^{}]*)\}/g,'Math.pow(($2),(1/($1)))'); for(let i=0;i<5;i++){ let p=s; s=s.replace(/\\sqrt\s*\{([^{}]*)\}/g,'Math.sqrt($1)'); if(s===p) break; } s=s.replace(/\\sqrt\b/g,'Math.sqrt').replace(/\^\{([^{}]*)\}/g,'**($1)').replace(/\^(-?\d+\.?\d*)/g,'**($1)').replace(/\^([a-zA-Z])/g,'**$1'); s=s.replace(/\_\{[^{}]*\}/g,'').replace(/\_[a-zA-Z0-9]/g,''); s=s.replace(/\\arcsin\b/g,'Math.asin').replace(/\\arccos\b/g,'Math.acos').replace(/\\arctan\b/g,'Math.atan'); s=s.replace(/\\sin\b/g,'Math.sin').replace(/\\cos\b/g,'Math.cos').replace(/\\tan\b/g,'Math.tan'); s=s.replace(/\\sinh\b/g,'Math.sinh').replace(/\\cosh\b/g,'Math.cosh').replace(/\\tanh\b/g,'Math.tanh'); s=s.replace(/\\ln\b/g,'Math.log').replace(/\\log\b/g,'Math.log10').replace(/\\exp\b/g,'Math.exp'); s=s.replace(/\\abs\b/g,'Math.abs').replace(/\\max\b/g,'Math.max').replace(/\\min\b/g,'Math.min'); s=s.replace(/\\pi\b/g,'Math.PI').replace(/\\infty\b/g,'Infinity').replace(/\\e\b/g,'Math.E'); s=s.replace(/\\[a-zA-Z]+\*/g,'').replace(/\\[a-zA-Z]+/g,'').replace(/[{}]/g,''); s=s.replace(/(\d)(x\b)/g,'$1*$2').replace(/(\d)\(/g,'$1*(').replace(/\)\(/g,')*(').replace(/\)(x\b)/g,')*$1'); return s; }
-  function createEvaluator(jsExpr){ try{ let fn=new Function('x','"use strict"; try { return '+jsExpr+'; } catch(e) { return NaN; }'); fn(0); return {evaluate:fn, valid:true, error:null}; }catch(e){ return {evaluate:()=>NaN, valid:false, error:e.message}; } }
+  // 转换latex为js表达式（加强）
+  function latexToJs(latex) { let s=latex.trim(); s=s.replace(/\\left\s*\(/g,'(').replace(/\\right\s*\)/g,')').replace(/\\left\s*\[/g,'(').replace(/\\right\s*\]/g,')'); for(let i=0;i<5;i++) s=s.replace(/\\frac\{([^{}]*)\}\{([^{}]*)\}/g,'(($1)/($2))'); s=s.replace(/\\sqrt\s*\[([^\]]*)\]\s*\{([^{}]*)\}/g,'Math.pow(($2),(1/($1)))').replace(/\\sqrt\s*\{([^{}]*)\}/g,'Math.sqrt($1)'); s=s.replace(/\^\{([^{}]*)\}/g,'**($1)').replace(/\^(-?\d+\.?\d*)/g,'**($1)').replace(/\^([a-zA-Z])/g,'**$1'); s=s.replace(/\\sin\b/g,'Math.sin').replace(/\\cos\b/g,'Math.cos').replace(/\\tan\b/g,'Math.tan'); s=s.replace(/\\ln\b/g,'Math.log').replace(/\\pi\b/g,'Math.PI'); s=s.replace(/\\abs\b/g,'Math.abs').replace(/\\e\b/g,'Math.E'); s=s.replace(/[{}]/g,''); s=s.replace(/(\d)(x\b)/g,'$1*$2').replace(/(\d)\(/g,'$1*(').replace(/\)\(/g,')*('); return s; }
+  function createEvaluator(jsExpr){ try{ let fn=new Function('x','"use strict"; return '+jsExpr+';'); fn(0); return {evaluate:fn, valid:true, error:null}; }catch(e){ return {evaluate:()=>NaN, valid:false, error:e.message}; } }
   function parseSelectedFunctions(selectedText){ let lines=selectedText.split('\n'), funcs=[]; lines.forEach(line=>{ line=line.replace(/^\$+|\$+$/g,'').trim(); let m=line.match(/^y\s*=\s*(.+)$/i); if(m){ let latexExpr=m[1].trim(); let jsExpr=latexToJs(latexExpr); let ev=createEvaluator(jsExpr); funcs.push({latex:latexExpr, js:jsExpr, evaluator:ev}); } }); return funcs; }
+
   const PLOT_COLORS=['#0A84FF','#FF453A','#32D74B','#FF9F0A','#BF5AF2','#FF375F','#40C8E0','#FF6B35'];
   function niceInterval(range){ if(range<=0) return 1; let rough=range/8; let exp=Math.floor(Math.log10(Math.abs(rough))); let frac=rough/Math.pow(10,exp); let nice=frac<=1.2?1:frac<=2.5?2:frac<=6?5:10; return nice*Math.pow(10,exp); }
+
+  // 计算所有交点 (暴力扫描)
+  function findIntersections(funcs, xMin, xMax, steps=5000) {
+    if(funcs.length<2) return [];
+    let intersections = [];
+    let dx = (xMax-xMin)/steps;
+    for(let i=0;i<funcs.length;i++) {
+      for(let j=i+1;j<funcs.length;j++) {
+        let f1=funcs[i], f2=funcs[j];
+        if(!f1.evaluator.valid || !f2.evaluator.valid) continue;
+        let lastDiff = null;
+        let lastX = xMin;
+        let lastY1 = f1.evaluator.evaluate(xMin), lastY2 = f2.evaluator.evaluate(xMin);
+        for(let k=0;k<=steps;k++) {
+          let x = xMin + k*dx;
+          let y1 = f1.evaluator.evaluate(x), y2 = f2.evaluator.evaluate(x);
+          if(isFinite(y1) && isFinite(y2) && Math.abs(y1-y2) < 1e-6 && Math.abs(y1) < 1e6) {
+            intersections.push({x: x, y: y1, f1_idx:i, f2_idx:j});
+          } else if(lastDiff !== null && lastDiff * (y1-y2) < 0 && isFinite(y1) && isFinite(y2)) {
+            let x0 = lastX - lastDiff/( (y1-y2)-lastDiff ) * dx;
+            let y0 = (f1.evaluator.evaluate(x0)+f2.evaluator.evaluate(x0))/2;
+            if(isFinite(y0)) intersections.push({x: x0, y: y0, f1_idx:i, f2_idx:j});
+          }
+          lastDiff = y1-y2; lastX = x; lastY1=y1; lastY2=y2;
+        }
+      }
+    }
+    // 去重
+    let uniq=[];
+    intersections.forEach(p=>{ if(!uniq.some(u=>Math.abs(u.x-p.x)<1e-8 && u.f1_idx===p.f1_idx && u.f2_idx===p.f2_idx)) uniq.push(p); });
+    return uniq;
+  }
+
   function drawPlot(functions, xMin, xMax, yMin, yMax, canvasSize){
-    const W=canvasSize, H=canvasSize, canvas=document.createElement('canvas'), dpr=Math.min(window.devicePixelRatio||1,2.5);
+    const W=canvasSize, H=canvasSize, canvas=document.createElement('canvas'), dpr=Math.min(window.devicePixelRatio||1,2.2);
     canvas.width=W*dpr; canvas.height=H*dpr; canvas.style.width=W+'px'; canvas.style.height=H+'px';
     let ctx=canvas.getContext('2d'); ctx.scale(dpr,dpr);
     const toCanvasX=x=>(x-xMin)/(xMax-xMin)*W, toCanvasY=y=>H-(y-yMin)/(yMax-yMin)*H;
     ctx.fillStyle='#1a1a1c'; ctx.fillRect(0,0,W,H);
     ctx.strokeStyle='rgba(255,255,255,0.07)'; ctx.lineWidth=1; ctx.strokeRect(0.5,0.5,W-1,H-1);
     let xInterval=niceInterval(xMax-xMin), yInterval=niceInterval(yMax-yMin);
-    ctx.strokeStyle='rgba(255,255,255,0.045)'; ctx.lineWidth=0.5;
+    ctx.strokeStyle='rgba(255,255,255,0.1)'; ctx.lineWidth=0.6;
     let x0=Math.ceil(xMin/xInterval)*xInterval; for(let gx=x0; gx<=xMax+1e-9; gx+=xInterval){ let cx=toCanvasX(gx); ctx.beginPath(); ctx.moveTo(cx,0); ctx.lineTo(cx,H); ctx.stroke(); }
     let y0=Math.ceil(yMin/yInterval)*yInterval; for(let gy=y0; gy<=yMax+1e-9; gy+=yInterval){ let cy=toCanvasY(gy); ctx.beginPath(); ctx.moveTo(0,cy); ctx.lineTo(W,cy); ctx.stroke(); }
     let axisX=Math.max(1,Math.min(W-1,toCanvasX(0))), axisY=Math.max(1,Math.min(H-1,toCanvasY(0)));
-    ctx.save(); ctx.strokeStyle='rgba(255,255,255,0.75)'; ctx.lineWidth=1.5;
+    ctx.save(); ctx.strokeStyle='rgba(255,255,255,0.85)'; ctx.lineWidth=1.5;
     ctx.beginPath(); ctx.moveTo(0,axisY); ctx.lineTo(W,axisY); ctx.stroke();
-    ctx.fillStyle='rgba(255,255,255,0.7)'; ctx.beginPath(); ctx.moveTo(W-1,axisY); ctx.lineTo(W-10,axisY-5); ctx.lineTo(W-10,axisY+5); ctx.closePath(); ctx.fill();
-    ctx.fillStyle='rgba(255,255,255,0.7)'; ctx.font='italic 13px Georgia, serif'; ctx.textAlign='center'; ctx.textBaseline='bottom'; ctx.fillText('x',W-5,axisY-7);
+    ctx.fillStyle='rgba(255,255,255,0.8)'; ctx.beginPath(); ctx.moveTo(W-1,axisY); ctx.lineTo(W-9,axisY-5); ctx.lineTo(W-9,axisY+5); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,0.8)'; ctx.font='italic 13px Georgia, serif'; ctx.textAlign='center'; ctx.textBaseline='bottom'; ctx.fillText('x',W-6,axisY-7);
     ctx.beginPath(); ctx.moveTo(axisX,0); ctx.lineTo(axisX,H); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(axisX,1); ctx.lineTo(axisX-5,12); ctx.lineTo(axisX+5,12); ctx.closePath(); ctx.fill();
-    ctx.fillStyle='rgba(255,255,255,0.7)'; ctx.font='italic 13px Georgia, serif'; ctx.textAlign='left'; ctx.textBaseline='middle'; ctx.fillText('y',axisX+8,14);
-    ctx.fillStyle='rgba(255,255,255,0.55)'; ctx.font='11px -apple-system, "Noto Sans SC", sans-serif'; ctx.strokeStyle='rgba(255,255,255,0.4)'; ctx.lineWidth=1;
-    for(let tx=x0; tx<=xMax+1e-9; tx+=xInterval){ let cx=toCanvasX(tx); ctx.beginPath(); ctx.moveTo(cx,axisY-5); ctx.lineTo(cx,axisY+5); ctx.stroke(); if(Math.abs(tx)>1e-9){ ctx.textAlign='center'; ctx.textBaseline='top'; let labelY=(axisY+8<H-14)?axisY+8:axisY-18; ctx.fillText(tx===0?'0':(Number.isInteger(tx)?tx.toString():tx.toPrecision(4)), cx, labelY); } }
-    for(let ty=y0; ty<=yMax+1e-9; ty+=yInterval){ let cy=toCanvasY(ty); ctx.beginPath(); ctx.moveTo(axisX-5,cy); ctx.lineTo(axisX+5,cy); ctx.stroke(); if(Math.abs(ty)>1e-9){ ctx.textAlign=axisX-8>28?'right':'left'; ctx.textBaseline='middle'; let labelX=(axisX-8>28)?axisX-8:axisX+8; ctx.fillText(Number.isInteger(ty)?ty.toString():ty.toPrecision(4), labelX, cy); } }
+    ctx.fillStyle='rgba(255,255,255,0.8)'; ctx.font='italic 13px Georgia, serif'; ctx.fillText('y',axisX+8,14);
+    // 更清晰的刻度数字：加大字号、加亮、抗锯齿
+    ctx.fillStyle='rgba(255,255,255,0.92)'; ctx.font='bold 12px "Noto Sans SC", "JetBrains Mono", system-ui'; ctx.shadowBlur=0;
+    for(let tx=x0; tx<=xMax+1e-9; tx+=xInterval){ let cx=toCanvasX(tx); ctx.beginPath(); ctx.moveTo(cx,axisY-5); ctx.lineTo(cx,axisY+5); ctx.stroke(); if(Math.abs(tx)>1e-9){ ctx.textAlign='center'; ctx.textBaseline='top'; let labelY=(axisY+8<H-14)?axisY+8:axisY-18; let tickVal=Math.abs(tx)<1e-9?'0':(Number.isInteger(tx)?tx.toString():tx.toFixed(3).replace(/\.?0+$/,''));
+        ctx.fillText(tickVal, cx, labelY); } }
+    for(let ty=y0; ty<=yMax+1e-9; ty+=yInterval){ let cy=toCanvasY(ty); ctx.beginPath(); ctx.moveTo(axisX-5,cy); ctx.lineTo(axisX+5,cy); ctx.stroke(); if(Math.abs(ty)>1e-9){ ctx.textAlign=axisX-8>28?'right':'left'; ctx.textBaseline='middle'; let labelX=(axisX-8>28)?axisX-8:axisX+8; let tickVal=Math.abs(ty)<1e-9?'0':(Number.isInteger(ty)?ty.toString():ty.toFixed(3).replace(/\.?0+$/,''));
+        ctx.fillText(tickVal, labelX, cy); } }
     if(xMin<0 && xMax>0 && yMin<0 && yMax>0){ ctx.textAlign='right'; ctx.textBaseline='top'; ctx.fillText('0',axisX-5,axisY+4); } ctx.restore();
-    let STEPS=Math.max(W*2.5,1800), dx=(xMax-xMin)/STEPS, yRange=yMax-yMin;
-    functions.forEach((fn,idx)=>{ if(!fn.evaluator.valid) return; let color=PLOT_COLORS[idx%PLOT_COLORS.length]; ctx.save(); ctx.strokeStyle=color; ctx.lineWidth=2.2; ctx.lineJoin='round'; ctx.beginPath(); let penDown=false, prevY=NaN; for(let i=0;i<=STEPS;i++){ let px=xMin+i*dx, py=fn.evaluator.evaluate(px); if(!isFinite(py)||isNaN(py)){ penDown=false; prevY=NaN; continue; } if(isFinite(prevY)&&Math.abs(py-prevY)>yRange*3){ penDown=false; } let cpx=toCanvasX(px), cpy=toCanvasY(py); if(cpy<-H||cpy>H*2){ penDown=false; prevY=py; continue; } if(!penDown){ ctx.moveTo(cpx,cpy); penDown=true; }else{ ctx.lineTo(cpx,cpy); } prevY=py; } ctx.stroke(); ctx.restore(); });
+    let STEPS=Math.max(W*2.2, 2200), dx=(xMax-xMin)/STEPS;
+    functions.forEach((fn,idx)=>{ if(!fn.evaluator.valid) return; let color=PLOT_COLORS[idx%PLOT_COLORS.length]; ctx.save(); ctx.strokeStyle=color; ctx.lineWidth=2.2; ctx.lineJoin='round'; ctx.beginPath(); let penDown=false, prevY=NaN; for(let i=0;i<=STEPS;i++){ let px=xMin+i*dx, py=fn.evaluator.evaluate(px); if(!isFinite(py)||isNaN(py)){ penDown=false; prevY=NaN; continue; } let cpx=toCanvasX(px), cpy=toCanvasY(py); if(cpy<-H||cpy>H*2){ penDown=false; prevY=py; continue; } if(!penDown){ ctx.moveTo(cpx,cpy); penDown=true; }else{ ctx.lineTo(cpx,cpy); } prevY=py; } ctx.stroke(); ctx.restore(); });
     return canvas;
   }
 
   let plotModalOverlay=document.getElementById('plot-modal-overlay'), currentFunctions=[];
   function openPlotModal(){ let sel=textarea.value.substring(textarea.selectionStart,textarea.selectionEnd).trim(); if(!sel){ showToast('请先选中包含 y = f(x) 的文本'); return; } currentFunctions=parseSelectedFunctions(sel); let listDiv=document.getElementById('plot-functions-list'); listDiv.innerHTML=''; if(currentFunctions.length===0){ let nd=document.createElement('div'); nd.className='fn-no-funcs'; nd.textContent='未找到 y = f(x) 格式的函数'; listDiv.appendChild(nd); document.getElementById('plot-modal-confirm').disabled=true; }else{ document.getElementById('plot-modal-confirm').disabled=false; currentFunctions.forEach((fn,idx)=>{ let chip=document.createElement('div'); chip.className='fn-chip'; let dot=document.createElement('span'); dot.className='fn-color-dot'; dot.style.background=PLOT_COLORS[idx%PLOT_COLORS.length]; let expr=document.createElement('span'); expr.className='fn-expr'; expr.textContent='y = '+fn.latex; chip.appendChild(dot); chip.appendChild(expr); if(!fn.evaluator.valid){ let errSpan=document.createElement('span'); errSpan.className='fn-error'; errSpan.textContent='⚠ 解析失败'; chip.appendChild(errSpan); } listDiv.appendChild(chip); }); } plotModalOverlay.classList.add('visible'); }
   function closePlotModal(){ plotModalOverlay.classList.remove('visible'); }
-  function executePlot(){ let xMin=parseFloat(document.getElementById('plot-xmin').value), xMax=parseFloat(document.getElementById('plot-xmax').value), yMin=parseFloat(document.getElementById('plot-ymin').value), yMax=parseFloat(document.getElementById('plot-ymax').value), sizeEl=document.querySelector('input[name="plot-size"]:checked'), size=sizeEl?parseInt(sizeEl.value):600; if(isNaN(xMin)||isNaN(xMax)||isNaN(yMin)||isNaN(yMax)||xMin>=xMax||yMin>=yMax){ showToast('请检查范围设置'); return; } let validFns=currentFunctions.filter(f=>f.evaluator.valid); if(validFns.length===0){ showToast('没有可绘制的有效函数'); return; } closePlotModal(); setTimeout(()=>{ let canvas=drawPlot(validFns,xMin,xMax,yMin,yMax,size); let block=document.createElement('div'); block.className='plot-output-block'; let header=document.createElement('div'); header.className='plot-output-header'; let title=document.createElement('span'); title.className='plot-output-title'; title.textContent='函数图像'; let meta=document.createElement('span'); meta.className='plot-output-meta'; meta.textContent=`x ∈ [${xMin}, ${xMax}]  y ∈ [${yMin}, ${yMax}]`; header.append(title,meta); let wrapper=document.createElement('div'); wrapper.className='plot-canvas-wrapper'; wrapper.appendChild(canvas); let legend=document.createElement('div'); legend.className='plot-legend'; validFns.forEach((fn,idx)=>{ let item=document.createElement('span'); item.className='legend-item'; let dot=document.createElement('span'); dot.className='legend-dot'; dot.style.background=PLOT_COLORS[idx%PLOT_COLORS.length]; item.appendChild(dot); item.appendChild(document.createTextNode(' y = '+fn.latex)); legend.appendChild(item); }); block.append(header,wrapper,legend); previewScroll.appendChild(block); block.scrollIntoView({behavior:'smooth',block:'nearest'}); showToast(`绘制了 ${validFns.length} 个函数`); },200); }
+  function executePlot(){ let xMin=parseFloat(document.getElementById('plot-xmin').value), xMax=parseFloat(document.getElementById('plot-xmax').value), yMin=parseFloat(document.getElementById('plot-ymin').value), yMax=parseFloat(document.getElementById('plot-ymax').value), sizeEl=document.querySelector('input[name="plot-size"]:checked'), size=sizeEl?parseInt(sizeEl.value):600; if(isNaN(xMin)||isNaN(xMax)||isNaN(yMin)||isNaN(yMax)||xMin>=xMax||yMin>=yMax){ showToast('请检查范围设置'); return; } let validFns=currentFunctions.filter(f=>f.evaluator.valid); if(validFns.length===0){ showToast('没有可绘制的有效函数'); return; } closePlotModal(); setTimeout(()=>{ let canvas=drawPlot(validFns,xMin,xMax,yMin,yMax,size); let intersections=findIntersections(validFns, xMin, xMax, Math.min(4000, Math.floor(size*2))); let block=document.createElement('div'); block.className='plot-output-block'; let header=document.createElement('div'); header.className='plot-output-header'; let title=document.createElement('span'); title.className='plot-output-title'; title.textContent='函数图像'; let meta=document.createElement('span'); meta.className='plot-output-meta'; meta.textContent=`x ∈ [${xMin}, ${xMax}]  y ∈ [${yMin}, ${yMax}]`; header.append(title,meta); let wrapper=document.createElement('div'); wrapper.className='plot-canvas-wrapper'; wrapper.appendChild(canvas); let legend=document.createElement('div'); legend.className='plot-legend'; validFns.forEach((fn,idx)=>{ let item=document.createElement('span'); item.className='legend-item'; let dot=document.createElement('span'); dot.className='legend-dot'; dot.style.background=PLOT_COLORS[idx%PLOT_COLORS.length]; item.appendChild(dot); item.appendChild(document.createTextNode(' y = '+fn.latex)); legend.appendChild(item); }); block.append(header,wrapper,legend); if(intersections.length>0){ let interDiv=document.createElement('div'); interDiv.className='intersections-list'; let interTitle=document.createElement('div'); interTitle.className='intersections-title'; interTitle.textContent=`✧ 交点坐标 (共${intersections.length}个) ✧`; interDiv.appendChild(interTitle); intersections.forEach(p=>{ let item=document.createElement('div'); item.className='intersection-item'; item.textContent=`[${p.f1_idx+1}∩${p.f2_idx+1}]  (${p.x.toFixed(5)}, ${p.y.toFixed(5)})`; interDiv.appendChild(item); }); block.appendChild(interDiv); } previewScroll.appendChild(block); block.scrollIntoView({behavior:'smooth',block:'nearest'}); showToast(`绘制了 ${validFns.length} 个函数，找到 ${intersections.length} 个交点`); },200); }
   document.getElementById('plot-modal-close').addEventListener('click',closePlotModal);
   document.getElementById('plot-modal-cancel').addEventListener('click',closePlotModal);
   document.getElementById('plot-modal-confirm').addEventListener('click',executePlot);
@@ -495,8 +547,8 @@ function init() {
   document.addEventListener('keydown',e=>{ let mod=e.ctrlKey||e.metaKey; if(!mod) return; if(e.key.toLowerCase()==='k'){ e.preventDefault(); applySmartConvert(); }else if(e.key.toLowerCase()==='p'){ e.preventDefault(); openPlotModal(); }else if(e.key.toLowerCase()==='n'){ e.preventDefault(); textarea.value=''; refreshPreview(); }else if(e.key.toLowerCase()==='o'){ e.preventDefault(); document.getElementById('file-input').click(); }else if(e.key.toLowerCase()==='s'){ e.preventDefault(); let blob=new Blob([textarea.value],{type:'text/plain'}); saveAs(blob,'document.tex'); showToast('已保存'); } });
   let resizer=document.getElementById('resizer'), editorPane=document.getElementById('editor-pane'), mainEl=document.getElementById('main'), isResizing=false; resizer.addEventListener('mousedown',e=>{ isResizing=true; resizer.classList.add('dragging'); e.preventDefault(); }); document.addEventListener('mousemove',e=>{ if(!isResizing) return; let rect=mainEl.getBoundingClientRect(); let w=Math.max(280,Math.min(e.clientX-rect.left,rect.width-280)); editorPane.style.width=w+'px'; }); document.addEventListener('mouseup',()=>{ if(isResizing){ isResizing=false; resizer.classList.remove('dragging'); } });
 
-  const DEMO='# LaTeX Editor with Function Plotter\n\n欢迎使用增强版编辑器。支持行内公式 $e^{i\\pi} + 1 = 0$ 和独立公式块。\n\n$$\\int_{-\\infty}^{\\infty} e^{-x^2} dx = \\sqrt{\\pi}$$\n\n## 绘图功能\n\n选中下方一行或多行，按 **Ctrl+P**（或点击"绘图"按钮）即可绘制：\n\ny = x^2\ny = \\sin(x)\ny = \\frac{1}{x}\n\n提示：可多选几行同时绘制到同一坐标系。\n\n## 智能转换\n\n选中 `x2 + sin(x)` 再按 **Ctrl+K** 可自动转换为 LaTeX 公式。';
-  textarea.value=DEMO; refreshPreview(); setStatus('就绪 — 使用 Ctrl+P 绘制函数图像 · Ctrl+K 智能转换');
+  const DEMO='# LaTeX Editor with Function Plotter\n\n欢迎使用增强版编辑器。支持行内公式 $e^{i\\pi} + 1 = 0$ 和独立公式块。\n\n$$\\int_{-\\infty}^{\\infty} e^{-x^2} dx = \\sqrt{\\pi}$$\n\n## 绘图功能\n\n选中下方一行或多行，按 **Ctrl+P**（或点击"绘图"按钮）即可绘制：\n\ny = x^2\ny = \\sin(x)\ny = \\frac{1}{x}\n\n提示：可多选几行同时绘制到同一坐标系，自动计算并显示交点坐标。\n\n## 智能转换\n\n选中 `x2 + sin(x)` 再按 **Ctrl+K** 可自动转换为 LaTeX 公式。';
+  textarea.value=DEMO; refreshPreview(); setStatus('就绪 — 使用 Ctrl+P 绘制函数图像 · 交点自动显示 · 刻度更清晰');
 }
 </script>
 </body>
