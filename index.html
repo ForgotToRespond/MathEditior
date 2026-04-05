@@ -3,41 +3,45 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover" />
-<title>LaTeX Editor - 支持行内公式 & PDF导出</title>
+<title>LaTeX Editor</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600&family=Noto+Serif+SC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" />
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <style>
 :root {
-  --bg-base:        #1E1E1E;
-  --bg-card:        #2B2B2B;
-  --bg-toolbar:     #242424;
-  --bg-statusbar:   #1A1A1A;
+  --bg-base:        #1C1C1E;
+  --bg-card:        #2C2C2E;
+  --bg-toolbar:     #232325;
+  --bg-statusbar:   #18181A;
   --border:         rgba(255,255,255,0.08);
   --border-focus:   rgba(255,255,255,0.22);
   --accent:         #0A84FF;
   --accent-hover:   #1A90FF;
   --accent-dim:     rgba(10,132,255,0.18);
-  --text-primary:   rgba(255,255,255,0.88);
-  --text-secondary: rgba(255,255,255,0.45);
-  --text-muted:     rgba(255,255,255,0.25);
+  --text-primary:   rgba(255,255,255,0.90);
+  --text-secondary: rgba(255,255,255,0.48);
+  --text-muted:     rgba(255,255,255,0.26);
   --btn-bg:         rgba(255,255,255,0.07);
   --btn-hover:      rgba(255,255,255,0.12);
   --btn-active:     rgba(255,255,255,0.05);
   --danger:         #FF453A;
   --success:        #32D74B;
-  --radius:         12px;
-  --radius-sm:      8px;
+  --radius:         14px;
+  --radius-sm:      9px;
   --radius-xs:      6px;
-  --font-ui:        -apple-system, "SF Pro Text", "PingFang SC", "Microsoft YaHei", "Segoe UI", Roboto, system-ui, sans-serif;
-  --font-editor:    "SF Mono", "Fira Code", "JetBrains Mono", "Cascadia Code", "Consolas", "Monaco", monospace;
-  --font-preview:   -apple-system, "SF Pro Text", "PingFang SC", "Microsoft YaHei", "Segoe UI", Roboto, Georgia, "Times New Roman", serif;
-  --shadow-card:    0 2px 16px rgba(0,0,0,0.45), 0 0 0 0.5px rgba(255,255,255,0.06);
+  /* fonts */
+  --font-ui:        "Noto Sans SC", -apple-system, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  --font-editor:    "JetBrains Mono", "Noto Sans SC", "PingFang SC", "Fira Code", "Cascadia Code", "Consolas", monospace;
+  --font-preview:   "Noto Serif SC", "Source Han Serif SC", "PingFang SC", "Microsoft YaHei", Georgia, serif;
+  --shadow-card:    0 2px 20px rgba(0,0,0,0.50), 0 0 0 0.5px rgba(255,255,255,0.07);
   --shadow-btn:     0 1px 4px rgba(0,0,0,0.4);
   --transition:     0.2s cubic-bezier(0.4,0,0.2,1);
   --safe-top:    env(safe-area-inset-top, 0px);
@@ -69,6 +73,7 @@ body {
   padding-right: var(--safe-right);
 }
 
+/* ─── TOOLBAR ─── */
 #toolbar {
   display: flex;
   align-items: center;
@@ -92,13 +97,7 @@ body {
   gap: 7px;
   flex-shrink: 0;
 }
-.toolbar-divider {
-  width: 0.5px;
-  height: 20px;
-  background: var(--border);
-  margin: 0 2px;
-  flex-shrink: 0;
-}
+.toolbar-divider { width: 0.5px; height: 20px; background: var(--border); margin: 0 2px; flex-shrink: 0; }
 .toolbar-spacer { flex: 1; min-width: 6px; }
 .btn {
   display: inline-flex;
@@ -126,323 +125,403 @@ body {
 .btn:active  { background: var(--btn-active); transform: scale(0.96); }
 .btn.accent  { background: var(--accent); border-color: transparent; color: #fff; }
 .btn.accent:hover  { background: var(--accent-hover); box-shadow: 0 0 0 3px var(--accent-dim); }
+.btn.plot-btn { background: rgba(50,215,75,0.12); border-color: rgba(50,215,75,0.25); color: #32D74B; }
+.btn.plot-btn:hover { background: rgba(50,215,75,0.2); border-color: rgba(50,215,75,0.4); }
 .shortcut-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
+  display: inline-flex; align-items: center; gap: 2px;
   padding: 1px 5px;
   background: rgba(255,255,255,0.06);
   border: 0.5px solid rgba(255,255,255,0.1);
   border-radius: 4px;
   font-size: 11px;
   color: var(--text-muted);
-  font-family: var(--font-mono);
   flex-shrink: 0;
 }
 
-#main {
-  display: flex;
-  flex: 1;
-  overflow: hidden;
-  min-height: 0;
-}
+/* ─── MAIN LAYOUT ─── */
+#main { display: flex; flex: 1; overflow: hidden; min-height: 0; }
 #editor-pane {
-  display: flex;
-  flex-direction: column;
-  width: 50%;
-  min-width: 360px;
+  display: flex; flex-direction: column;
+  width: 50%; min-width: 360px;
   border-right: 0.5px solid var(--border);
   background: var(--bg-base);
-  flex-shrink: 0;
-  min-height: 0;
+  flex-shrink: 0; min-height: 0;
 }
 .pane-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  display: flex; align-items: center; justify-content: space-between;
   padding: 9px 14px;
   background: var(--bg-toolbar);
   border-bottom: 0.5px solid var(--border);
-  flex-shrink: 0;
-  gap: 8px;
-  flex-wrap: wrap;
+  flex-shrink: 0; gap: 8px; flex-wrap: wrap;
 }
 .pane-label {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-secondary);
-  white-space: nowrap;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--text-secondary); white-space: nowrap;
 }
-.pane-header-actions {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-.pane-header-actions .btn {
-  padding: 4px 10px;
-  font-size: 12px;
-  min-height: 28px;
-}
+.pane-header-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.pane-header-actions .btn { padding: 4px 10px; font-size: 12px; min-height: 28px; }
+
+/* ─── EDITOR TEXTAREA ─── */
 #editor-textarea {
-  flex: 1;
-  width: 100%;
+  flex: 1; width: 100%;
   background: var(--bg-card);
   color: var(--text-primary);
-  border: none;
-  resize: none;
-  /* 优化编辑器字体 - 电脑端更大更舒适 */
+  border: none; resize: none;
   font-family: var(--font-editor);
   font-size: 15px;
-  line-height: 1.7;
-  letter-spacing: 0.3px;
-  padding: 20px 22px;
+  line-height: 1.8;
+  letter-spacing: 0.35px;
+  padding: 22px 24px;
   outline: none;
   tab-size: 2;
   caret-color: var(--accent);
-  min-height: 0;
-  overflow-y: auto;
+  min-height: 0; overflow-y: auto;
 }
-#editor-textarea::selection { background: rgba(10,132,255,0.3); }
+#editor-textarea::selection { background: rgba(10,132,255,0.28); }
 .editor-hint {
-  font-size: 11px;
-  color: var(--text-muted);
-  padding: 6px 14px;
-  background: var(--bg-toolbar);
-  border-top: 0.5px solid var(--border);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-shrink: 0;
-  overflow-x: auto;
+  font-size: 11px; color: var(--text-muted); padding: 6px 14px;
+  background: var(--bg-toolbar); border-top: 0.5px solid var(--border);
+  display: flex; align-items: center; gap: 10px; flex-shrink: 0; overflow-x: auto;
 }
 .hint-item { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
 kbd {
   display: inline-flex; align-items: center;
-  padding: 1px 5px;
-  background: rgba(255,255,255,0.07);
-  border: 0.5px solid rgba(255,255,255,0.12);
-  border-radius: 4px;
-  font-size: 10.5px;
-  font-family: var(--font-editor);
-  color: var(--text-secondary);
+  padding: 1px 5px; background: rgba(255,255,255,0.07);
+  border: 0.5px solid rgba(255,255,255,0.12); border-radius: 4px;
+  font-size: 10.5px; font-family: var(--font-editor); color: var(--text-secondary);
 }
 
+/* ─── RESIZER ─── */
 #resizer {
-  width: 4px;
-  background: transparent;
-  cursor: col-resize;
-  flex-shrink: 0;
-  z-index: 5;
+  width: 4px; background: transparent; cursor: col-resize; flex-shrink: 0; z-index: 5;
   transition: background 0.2s;
 }
 #resizer:hover { background: rgba(10,132,255,0.4); }
 #resizer.dragging { background: var(--accent); }
 
-#preview-pane {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  background: var(--bg-base);
-  overflow: hidden;
-  min-height: 0;
-}
-#preview-scroll {
-  flex: 1;
-  overflow-y: auto;
-  padding: 16px;
-}
+/* ─── PREVIEW PANE ─── */
+#preview-pane { display: flex; flex-direction: column; flex: 1; background: var(--bg-base); overflow: hidden; min-height: 0; }
+#preview-scroll { flex: 1; overflow-y: auto; padding: 16px; }
 #preview-scroll::-webkit-scrollbar { width: 6px; }
 #preview-scroll::-webkit-scrollbar-track { background: transparent; }
 #preview-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
 #preview-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  flex: 1;
-  gap: 14px;
-  opacity: 0.4;
-  pointer-events: none;
-  padding: 40px;
-  text-align: center;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  flex: 1; gap: 14px; opacity: 0.4; pointer-events: none; padding: 40px; text-align: center;
 }
-#preview-empty p {
-  font-size: 13px;
-  color: var(--text-secondary);
-  max-width: 220px;
-  line-height: 1.6;
-}
+#preview-empty p { font-size: 13px; color: var(--text-secondary); max-width: 220px; line-height: 1.6; }
 
 .document-container {
-  background: var(--bg-card);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-card);
-  padding: 28px 32px;
+  background: var(--bg-card); border-radius: var(--radius);
+  box-shadow: var(--shadow-card); padding: 28px 32px;
   transition: border-color var(--transition), box-shadow var(--transition);
 }
 .document-container:hover {
   border-color: rgba(255,255,255,0.14);
-  box-shadow: 0 4px 24px rgba(0,0,0,0.55), 0 0 0 0.5px rgba(255,255,255,0.1);
+  box-shadow: 0 4px 28px rgba(0,0,0,0.58), 0 0 0 0.5px rgba(255,255,255,0.1);
 }
 
-/* 预览区正文字体优化 */
+/* ─── PREVIEW TEXT ─── */
 .document-text {
-  margin: 0.75em 0;
-  line-height: 1.7;
-  white-space: pre-wrap;
+  margin: 0.75em 0; line-height: 1.85; white-space: pre-wrap;
   color: var(--text-primary);
   font-family: var(--font-preview);
-  font-size: 15px;
-  letter-spacing: 0.2px;
+  font-size: 16px;
+  letter-spacing: 0.3px;
 }
-.document-text h1 {
-  font-family: var(--font-ui);
-  font-size: 1.8em;
-  font-weight: 600;
-  margin: 0.67em 0;
-  border-bottom: 1px solid var(--border);
-  padding-bottom: 0.3em;
+.document-text h1 { font-family: var(--font-ui); font-size: 1.8em; font-weight: 600; margin: 0.67em 0; border-bottom: 1px solid var(--border); padding-bottom: 0.3em; }
+.document-text h2 { font-family: var(--font-ui); font-size: 1.5em; font-weight: 600; margin: 0.75em 0; border-bottom: 1px solid var(--border); padding-bottom: 0.3em; }
+.document-text h3 { font-family: var(--font-ui); font-size: 1.25em; font-weight: 600; margin: 0.83em 0; }
+.document-text code { font-family: var(--font-editor); background: rgba(255,255,255,0.07); padding: 2px 6px; border-radius: 4px; font-size: 0.88em; }
+.document-text .inline-formula { display: inline; margin: 0 0.1em; }
+.document-formula { margin: 1.2em 0; text-align: center; overflow-x: auto; padding: 0.25em 0; }
+.document-formula .katex-display { margin: 0; }
+.katex { color: rgba(255,255,255,0.92) !important; font-size: 1.05em; }
+.formula-error { color: var(--danger); font-size: 12px; font-family: var(--font-editor); padding: 8px 12px; background: rgba(255,69,58,0.1); border-radius: var(--radius-xs); border-left: 2px solid var(--danger); display: inline-block; }
+
+/* ─── PLOT OUTPUT ─── */
+.plot-output-block {
+  margin-top: 16px;
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  border: 0.5px solid rgba(255,255,255,0.08);
 }
-.document-text h2 {
-  font-family: var(--font-ui);
-  font-size: 1.5em;
-  font-weight: 600;
-  margin: 0.75em 0;
-  border-bottom: 1px solid var(--border);
-  padding-bottom: 0.3em;
+.plot-output-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 16px;
+  background: var(--bg-toolbar);
+  border-bottom: 0.5px solid var(--border);
 }
-.document-text h3 {
-  font-family: var(--font-ui);
-  font-size: 1.25em;
-  font-weight: 600;
-  margin: 0.83em 0;
+.plot-output-title { font-size: 12px; font-weight: 600; color: var(--text-secondary); letter-spacing: 0.06em; }
+.plot-output-meta { font-size: 11px; color: var(--text-muted); }
+.plot-canvas-wrapper { padding: 12px; display: flex; justify-content: center; }
+.plot-canvas-wrapper canvas { border-radius: 8px; max-width: 100%; display: block; }
+.plot-legend {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  padding: 10px 14px 14px;
 }
-.document-text code {
+.legend-item {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; color: var(--text-secondary);
   font-family: var(--font-editor);
-  background: rgba(255,255,255,0.07);
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 0.9em;
 }
-.document-text strong { font-weight: 600; }
-.document-text em { font-style: italic; }
-.document-text .inline-formula {
-  display: inline;
-  margin: 0 0.1em;
-}
-.document-formula {
-  margin: 1.2em 0;
-  text-align: center;
-  overflow-x: auto;
-  padding: 0.25em 0;
-}
-.document-formula .katex-display {
-  margin: 0;
-}
-.katex {
-  color: rgba(255,255,255,0.9) !important;
-  font-size: 1.05em;
-}
-.formula-error {
-  color: var(--danger);
-  font-size: 12px;
-  font-family: var(--font-editor);
-  padding: 8px 12px;
-  background: rgba(255,69,58,0.1);
-  border-radius: var(--radius-xs);
-  border-left: 2px solid var(--danger);
-  display: inline-block;
-  text-align: left;
+.legend-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  flex-shrink: 0;
 }
 
+/* ─── STATUS BAR ─── */
 #statusbar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 16px;
-  padding-bottom: calc(6px + var(--safe-bottom));
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 16px; padding-bottom: calc(6px + var(--safe-bottom));
   background: var(--bg-statusbar);
   border-top: 0.5px solid var(--border);
-  flex-shrink: 0;
-  font-size: 11.5px;
-  color: var(--text-secondary);
+  flex-shrink: 0; font-size: 11.5px; color: var(--text-secondary);
   font-family: var(--font-editor);
 }
-.status-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--success);
-  flex-shrink: 0;
-  transition: background 0.3s;
-}
+.status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); flex-shrink: 0; transition: background 0.3s; }
 .status-dot.error   { background: var(--danger); }
 .status-dot.working { background: #FF9F0A; animation: pulse 1s ease-in-out infinite; }
 @keyframes pulse { 0%,100% { opacity:1 } 50% { opacity:0.35 } }
 #status-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+/* ─── TOAST ─── */
 #toast {
-  position: fixed;
-  bottom: calc(52px + var(--safe-bottom));
-  left: 50%;
+  position: fixed; bottom: calc(52px + var(--safe-bottom)); left: 50%;
   transform: translateX(-50%) translateY(10px);
-  padding: 9px 18px;
-  background: rgba(44,44,46,0.96);
-  border: 0.5px solid rgba(255,255,255,0.12);
-  border-radius: 20px;
-  font-size: 13px;
-  color: var(--text-primary);
-  font-family: var(--font-ui);
-  backdrop-filter: blur(14px);
-  box-shadow: 0 4px 24px rgba(0,0,0,0.5);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.25s, transform 0.25s;
-  z-index: 1000;
-  white-space: nowrap;
-  max-width: calc(100vw - 40px);
-  text-align: center;
+  padding: 9px 18px; background: rgba(44,44,46,0.96);
+  border: 0.5px solid rgba(255,255,255,0.12); border-radius: 20px;
+  font-size: 13px; color: var(--text-primary); font-family: var(--font-ui);
+  backdrop-filter: blur(14px); box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+  opacity: 0; pointer-events: none; transition: opacity 0.25s, transform 0.25s;
+  z-index: 1000; white-space: nowrap; max-width: calc(100vw - 40px); text-align: center;
 }
 #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-/* 电脑端字体进一步优化 */
+/* ════════════════════════════════════════════
+   PLOT MODAL — APPLE STYLE
+═══════════════════════════════════════════ */
+#plot-modal-overlay {
+  position: fixed; inset: 0; z-index: 500;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(6px) saturate(160%);
+  -webkit-backdrop-filter: blur(6px) saturate(160%);
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+#plot-modal-overlay.visible {
+  opacity: 1; pointer-events: all;
+}
+#plot-modal {
+  background: rgba(38,38,40,0.97);
+  border: 0.5px solid rgba(255,255,255,0.14);
+  border-radius: 20px;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.7), 0 2px 12px rgba(0,0,0,0.5), 0 0 0 0.5px rgba(255,255,255,0.06);
+  width: 100%; max-width: 420px;
+  overflow: hidden;
+  transform: scale(0.88) translateY(16px);
+  opacity: 0;
+  transition: transform 0.38s cubic-bezier(0.34,1.56,0.64,1), opacity 0.25s ease;
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+}
+#plot-modal-overlay.visible #plot-modal {
+  transform: scale(1) translateY(0);
+  opacity: 1;
+}
+#plot-modal-overlay.closing #plot-modal {
+  transform: scale(0.92) translateY(8px);
+  opacity: 0;
+  transition: transform 0.18s cubic-bezier(0.4,0,1,1), opacity 0.16s ease;
+}
+#plot-modal-overlay.closing {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 20px 14px;
+}
+.modal-title {
+  font-size: 17px; font-weight: 600;
+  font-family: var(--font-ui);
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+.modal-close-btn {
+  width: 28px; height: 28px;
+  background: rgba(255,255,255,0.1);
+  border: none; border-radius: 50%;
+  color: var(--text-secondary);
+  font-size: 12px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background var(--transition);
+}
+.modal-close-btn:hover { background: rgba(255,255,255,0.18); }
+
+.modal-divider { height: 0.5px; background: var(--border); margin: 0; }
+
+.modal-section { padding: 14px 20px; }
+.modal-section + .modal-section { border-top: 0.5px solid var(--border); padding-top: 12px; }
+.modal-section-label {
+  font-size: 11px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.07em; color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+/* Function chips */
+#plot-functions-list { display: flex; flex-direction: column; gap: 7px; }
+.fn-chip {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px;
+  background: rgba(255,255,255,0.04);
+  border: 0.5px solid rgba(255,255,255,0.09);
+  border-radius: 10px;
+  font-family: var(--font-editor);
+  font-size: 13px;
+  color: var(--text-primary);
+  transition: background 0.15s;
+}
+.fn-chip:hover { background: rgba(255,255,255,0.07); }
+.fn-color-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.fn-expr { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fn-error { color: var(--danger); font-size: 11px; }
+.fn-no-funcs { font-size: 13px; color: var(--text-muted); text-align: center; padding: 12px 0; }
+
+/* Range grid */
+.modal-range-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+}
+.range-group label {
+  display: block; font-size: 11px; color: var(--text-muted);
+  margin-bottom: 4px; font-family: var(--font-ui);
+}
+.range-group input[type=number] {
+  width: 100%; padding: 8px 11px;
+  background: rgba(255,255,255,0.06);
+  border: 0.5px solid rgba(255,255,255,0.12);
+  border-radius: 9px;
+  color: var(--text-primary);
+  font-family: var(--font-editor);
+  font-size: 14px;
+  outline: none;
+  transition: border-color var(--transition), background var(--transition);
+  -moz-appearance: textfield;
+}
+.range-group input[type=number]::-webkit-inner-spin-button,
+.range-group input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+.range-group input[type=number]:focus {
+  border-color: var(--accent);
+  background: rgba(10,132,255,0.08);
+}
+
+/* Segmented control */
+.segmented-wrap { display: flex; gap: 0; }
+.segmented-control {
+  display: flex;
+  background: rgba(255,255,255,0.05);
+  border: 0.5px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  padding: 3px;
+  gap: 2px;
+  width: 100%;
+}
+.segmented-control input[type=radio] { display: none; }
+.segmented-control label {
+  flex: 1; text-align: center;
+  padding: 7px 10px;
+  border-radius: 8px;
+  font-size: 13px; font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition);
+  user-select: none;
+  font-family: var(--font-ui);
+  white-space: nowrap;
+}
+.segmented-control input[type=radio]:checked + label {
+  background: rgba(255,255,255,0.14);
+  color: var(--text-primary);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+.segmented-control label:hover { color: var(--text-primary); }
+
+/* Modal footer */
+.modal-footer {
+  display: flex; gap: 10px;
+  padding: 14px 20px; padding-bottom: calc(14px + var(--safe-bottom));
+  border-top: 0.5px solid var(--border);
+}
+.modal-btn-cancel {
+  flex: 1; padding: 12px;
+  background: rgba(255,255,255,0.07);
+  border: 0.5px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  color: var(--text-secondary); font-family: var(--font-ui);
+  font-size: 15px; font-weight: 500; cursor: pointer;
+  transition: background var(--transition);
+}
+.modal-btn-cancel:hover { background: rgba(255,255,255,0.12); color: var(--text-primary); }
+.modal-btn-confirm {
+  flex: 2; padding: 12px;
+  background: var(--accent);
+  border: none; border-radius: 12px;
+  color: #fff; font-family: var(--font-ui);
+  font-size: 15px; font-weight: 600; cursor: pointer;
+  transition: background var(--transition), box-shadow var(--transition), transform var(--transition);
+}
+.modal-btn-confirm:hover { background: var(--accent-hover); box-shadow: 0 0 0 4px var(--accent-dim); }
+.modal-btn-confirm:active { transform: scale(0.97); }
+.modal-btn-confirm:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Mobile bottom sheet */
+@media (max-width: 767px) {
+  #plot-modal-overlay { align-items: flex-end; padding: 0; }
+  #plot-modal {
+    max-width: 100%; border-radius: 20px 20px 0 0;
+    transform: translateY(100%);
+    transition: transform 0.38s cubic-bezier(0.32,0.72,0,1), opacity 0.25s ease;
+  }
+  #plot-modal-overlay.visible #plot-modal { transform: translateY(0); opacity: 1; }
+  #plot-modal-overlay.closing #plot-modal {
+    transform: translateY(100%); opacity: 1;
+    transition: transform 0.22s cubic-bezier(0.4,0,1,1);
+  }
+  .modal-drag-indicator {
+    width: 36px; height: 4px; border-radius: 2px;
+    background: rgba(255,255,255,0.2);
+    margin: 10px auto 0;
+  }
+}
+@media (min-width: 768px) { .modal-drag-indicator { display: none; } }
+
+/* ─── DESKTOP FONT ENHANCEMENT ─── */
 @media (min-width: 1024px) {
   #editor-textarea {
-    font-size: 16px;
-    line-height: 1.75;
+    font-size: 15.5px;
+    line-height: 1.85;
     letter-spacing: 0.4px;
   }
   .document-text {
-    font-size: 16px;
-    line-height: 1.75;
+    font-size: 16.5px;
+    line-height: 1.9;
   }
 }
 
 @media (max-width: 767px) {
   #main { flex-direction: column; }
-  #editor-pane {
-    width: 100% !important;
-    min-width: unset;
-    height: 40dvh;
-    border-right: none;
-    border-bottom: 0.5px solid var(--border);
-  }
+  #editor-pane { width: 100% !important; min-width: unset; height: 40dvh; border-right: none; border-bottom: 0.5px solid var(--border); }
   #preview-pane { height: 60dvh; flex: none; }
   #resizer { display: none; }
   .document-container { padding: 16px 20px; }
   .pane-header { flex-direction: column; align-items: stretch; gap: 8px; }
   .pane-header-actions { justify-content: flex-start; }
-  /* 移动端编辑器字体稍微调小 */
-  #editor-textarea {
-    font-size: 14px;
-    line-height: 1.65;
-  }
-  .document-text {
-    font-size: 14px;
-  }
+  #editor-textarea { font-size: 14px; line-height: 1.7; }
+  .document-text { font-size: 14.5px; }
 }
 </style>
 </head>
@@ -456,10 +535,12 @@ kbd {
     <input type="file" id="file-input" accept=".tex,.txt,.md" style="display:none" />
     <button class="btn" id="btn-save">保存</button>
     <div class="toolbar-divider"></div>
-    <button class="btn accent" id="btn-export-pdf"> 导出PDF</button>
-    <button class="btn" id="btn-export-preview"> 导出图片</button>
+    <button class="btn accent" id="btn-export-pdf">导出 PDF</button>
+    <button class="btn" id="btn-export-preview">导出图片</button>
+    <div class="toolbar-divider"></div>
+    <button class="btn plot-btn" id="btn-plot">📈 绘图</button>
     <div class="toolbar-spacer"></div>
-    <div class="shortcut-badge">⌘K 智能转换</div>
+    <div class="shortcut-badge">⌘K 转换 · ⌘P 绘图</div>
   </div>
 
   <div id="main">
@@ -467,21 +548,22 @@ kbd {
       <div class="pane-header">
         <span class="pane-label">编辑器</span>
         <div class="pane-header-actions">
-          <button class="btn" id="btn-smart-convert"> 智能转换 (crtl+K)</button>
+          <button class="btn" id="btn-smart-convert">✨ 智能转换 (⌘K)</button>
+          <button class="btn plot-btn" id="btn-plot-pane">📈 绘图 (⌘P)</button>
         </div>
       </div>
       <textarea id="editor-textarea" spellcheck="false" placeholder="输入文本，行内公式用 $...$，独立公式用 $$...$$
 
-示例：
-hi $\frac{x}{c}$  ← 行内公式，和文字在同一行
-
-独立公式：
-$$E = mc^2$$"></textarea>
+绘图示例（选中后按 ⌘P）：
+y = x^2
+y = \sin(x)
+y = \frac{1}{x}"></textarea>
       <div class="editor-hint">
-        <span class="hint-item"><kbd>$...$</kbd> 行内公式</span>
-        <span class="hint-item"><kbd>$$...$$</kbd> 独立公式</span>
-        <span class="hint-item"><kbd>⌘K</kbd> 智能转换</span>
-        <span class="hint-item"><kbd>📄</kbd> 导出PDF可分享微信</span>
+        <span class="hint-item"><kbd>$...$</kbd> 行内</span>
+        <span class="hint-item"><kbd>$$...$$</kbd> 独立</span>
+        <span class="hint-item"><kbd>⌘K</kbd> 转换</span>
+        <span class="hint-item"><kbd>⌘P</kbd> 绘图</span>
+        <span class="hint-item">选中 y=f(x) 后绘图</span>
       </div>
     </div>
     <div id="resizer"></div>
@@ -492,7 +574,7 @@ $$E = mc^2$$"></textarea>
       </div>
       <div id="preview-scroll">
         <div id="preview-empty">
-          <p>输入文本和公式后将在此实时渲染<br>行内公式: hi $x/c$</p>
+          <p>输入文本和公式后将在此实时渲染<br>选中 y=f(x) 按 ⌘P 绘图</p>
         </div>
       </div>
     </div>
@@ -503,23 +585,87 @@ $$E = mc^2$$"></textarea>
     <span id="status-text">就绪</span>
   </div>
 </div>
+
+<!-- ── PLOT MODAL ── -->
+<div id="plot-modal-overlay">
+  <div id="plot-modal">
+    <div class="modal-drag-indicator"></div>
+    <div class="modal-header">
+      <span class="modal-title">📈 绘制函数图像</span>
+      <button class="modal-close-btn" id="plot-modal-close" aria-label="关闭">✕</button>
+    </div>
+
+    <div class="modal-divider"></div>
+
+    <div class="modal-section">
+      <div class="modal-section-label">检测到的函数</div>
+      <div id="plot-functions-list"></div>
+    </div>
+
+    <div class="modal-section">
+      <div class="modal-section-label">X 轴范围</div>
+      <div class="modal-range-grid">
+        <div class="range-group">
+          <label>最小值</label>
+          <input type="number" id="plot-xmin" value="-10">
+        </div>
+        <div class="range-group">
+          <label>最大值</label>
+          <input type="number" id="plot-xmax" value="10">
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-section">
+      <div class="modal-section-label">Y 轴范围</div>
+      <div class="modal-range-grid">
+        <div class="range-group">
+          <label>最小值</label>
+          <input type="number" id="plot-ymin" value="-10">
+        </div>
+        <div class="range-group">
+          <label>最大值</label>
+          <input type="number" id="plot-ymax" value="10">
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-section">
+      <div class="modal-section-label">图像尺寸</div>
+      <div class="segmented-control">
+        <input type="radio" name="plot-size" id="size-sm" value="400">
+        <label for="size-sm">小 (400)</label>
+        <input type="radio" name="plot-size" id="size-md" value="600" checked>
+        <label for="size-md">中 (600)</label>
+        <input type="radio" name="plot-size" id="size-lg" value="800">
+        <label for="size-lg">大 (800)</label>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="modal-btn-cancel" id="plot-modal-cancel">取消</button>
+      <button class="modal-btn-confirm" id="plot-modal-confirm">绘制图像</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
 'use strict';
 
+/* ── Wait for KaTeX ── */
 function waitForKatex(cb, tries) {
   tries = tries || 0;
   if (typeof katex !== 'undefined') { cb(); return; }
-  if (tries > 50) { console.warn('KaTeX failed to load.'); cb(); return; }
+  if (tries > 50) { cb(); return; }
   setTimeout(function () { waitForKatex(cb, tries + 1); }, 100);
 }
 waitForKatex(init);
 
 function init() {
   var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-  var DEBOUNCE_DELAY = isMobile ? 500 : 300;
-  var EXPORT_PX_RATIO = isMobile ? 1.5 : 2;
+  var DEBOUNCE_DELAY = isMobile ? 500 : 280;
 
   var textarea = document.getElementById('editor-textarea');
   var previewScroll = document.getElementById('preview-scroll');
@@ -532,11 +678,11 @@ function init() {
   var toastTimer = null;
   var currentDocumentContainer = null;
 
+  /* ── Utilities ── */
   function setStatus(msg, type) {
     statusText.textContent = msg;
-    statusDot.className = 'status-dot' + (type !== 'ok' ? ' ' + type : '');
+    statusDot.className = 'status-dot' + (type && type !== 'ok' ? ' ' + type : '');
   }
-
   function showToast(msg, duration) {
     duration = duration || 2400;
     toast.textContent = msg;
@@ -544,11 +690,9 @@ function init() {
     clearTimeout(toastTimer);
     toastTimer = setTimeout(function () { toast.classList.remove('show'); }, duration);
   }
-
   function haptic(pattern) {
     try { if (navigator.vibrate) navigator.vibrate(pattern || 10); } catch (_) {}
   }
-
   function debounce(fn, delay) {
     var t;
     return function () {
@@ -558,12 +702,12 @@ function init() {
     };
   }
 
+  /* ─────────────────────────────────────────────
+     RENDER PREVIEW
+  ───────────────────────────────────────────── */
   function renderMarkdownBasic(text) {
     var html = text.replace(/[&<>]/g, function(m) {
-      if (m === '&') return '&amp;';
-      if (m === '<') return '&lt;';
-      if (m === '>') return '&gt;';
-      return m;
+      return m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;';
     });
     html = html.replace(/^### (.*$)/gm, '<h3>$1</h3>');
     html = html.replace(/^## (.*$)/gm, '<h2>$1</h2>');
@@ -578,67 +722,39 @@ function init() {
   }
 
   function renderTextWithInlineFormula(text) {
-    var inlineFormulaRegex = /\$([^\$]+?)\$/g;
-    var lastIndex = 0;
-    var result = '';
-    var match;
-
-    while ((match = inlineFormulaRegex.exec(text)) !== null) {
-      result += renderMarkdownBasic(text.substring(lastIndex, match.index));
-      var formulaContent = match[1].trim();
+    var re = /\$([^\$]+?)\$/g;
+    var last = 0; var result = ''; var m;
+    while ((m = re.exec(text)) !== null) {
+      result += renderMarkdownBasic(text.substring(last, m.index));
+      var f = m[1].trim();
       try {
         if (typeof katex !== 'undefined') {
-          var rendered = katex.renderToString(formulaContent, {
-            throwOnError: false,
-            errorColor: '#FF453A',
-            displayMode: false
-          });
-          result += '<span class="inline-formula">' + rendered + '</span>';
+          result += '<span class="inline-formula">' + katex.renderToString(f, { throwOnError: false, errorColor: '#FF453A', displayMode: false }) + '</span>';
         } else {
-          result += '<span class="formula-error">[KaTeX未加载] $' + formulaContent + '$</span>';
+          result += '<span class="formula-error">$' + f + '$</span>';
         }
-      } catch (err) {
-        result += '<span class="formula-error">❌ ' + err.message + '</span>';
-      }
-      lastIndex = match.index + match[0].length;
+      } catch (e) { result += '<span class="formula-error">❌ ' + e.message + '</span>'; }
+      last = m.index + m[0].length;
     }
-    result += renderMarkdownBasic(text.substring(lastIndex));
+    result += renderMarkdownBasic(text.substring(last));
     return result;
   }
 
   function parseContent(source) {
-    var blocks = [];
-    var re = /\$\$([\s\S]+?)\$\$/g;
-    var lastIndex = 0;
-    var match;
-
-    while ((match = re.exec(source)) !== null) {
-      if (match.index > lastIndex) {
-        var textBlock = source.substring(lastIndex, match.index);
-        if (textBlock) {
-          blocks.push({ type: 'text', content: textBlock });
-        }
-      }
-      blocks.push({ type: 'displayFormula', content: match[1].trim() });
-      lastIndex = match.index + match[0].length;
+    var blocks = []; var re = /\$\$([\s\S]+?)\$\$/g;
+    var last = 0; var m;
+    while ((m = re.exec(source)) !== null) {
+      if (m.index > last) blocks.push({ type: 'text', content: source.substring(last, m.index) });
+      blocks.push({ type: 'displayFormula', content: m[1].trim() });
+      last = m.index + m[0].length;
     }
-
-    if (lastIndex < source.length) {
-      var remainingText = source.substring(lastIndex);
-      if (remainingText) {
-        blocks.push({ type: 'text', content: remainingText });
-      }
-    }
-
+    if (last < source.length) blocks.push({ type: 'text', content: source.substring(last) });
     return blocks;
   }
 
   var refreshPreview = debounce(function () {
     var blocks = parseContent(textarea.value);
-
-    Array.from(previewScroll.children).forEach(function (c) {
-      if (c !== previewEmpty) c.remove();
-    });
+    Array.from(previewScroll.children).forEach(function (c) { if (c !== previewEmpty) c.remove(); });
 
     if (blocks.length === 0) {
       previewEmpty.style.display = 'flex';
@@ -646,262 +762,661 @@ function init() {
       setStatus('就绪');
       return;
     }
-
     previewEmpty.style.display = 'none';
 
     var docContainer = document.createElement('div');
     docContainer.className = 'document-container';
-
-    var formulaCount = 0;
-    var errCount = 0;
-    var textBlockCount = 0;
+    var formulaCount = 0; var errCount = 0; var textCount = 0;
 
     blocks.forEach(function (block) {
       if (block.type === 'text') {
-        var textDiv = document.createElement('div');
-        textDiv.className = 'document-text';
-        textDiv.innerHTML = renderTextWithInlineFormula(block.content);
-        docContainer.appendChild(textDiv);
-        textBlockCount++;
-      } else if (block.type === 'displayFormula') {
+        var d = document.createElement('div');
+        d.className = 'document-text';
+        d.innerHTML = renderTextWithInlineFormula(block.content);
+        docContainer.appendChild(d);
+        textCount++;
+      } else {
         formulaCount++;
-        var formulaWrapper = document.createElement('div');
-        formulaWrapper.className = 'document-formula';
-
+        var w = document.createElement('div');
+        w.className = 'document-formula';
         try {
           if (typeof katex !== 'undefined') {
-            katex.render(block.content, formulaWrapper, {
-              throwOnError: false,
-              errorColor: '#FF453A',
-              displayMode: true,
-              output: 'html',
-            });
-          } else {
-            formulaWrapper.textContent = '[KaTeX 未加载] ' + block.content;
-          }
-        } catch (err) {
+            katex.render(block.content, w, { throwOnError: false, errorColor: '#FF453A', displayMode: true, output: 'html' });
+          } else { w.textContent = block.content; }
+        } catch (e) {
           errCount++;
-          var errEl = document.createElement('div');
-          errEl.className = 'formula-error';
-          errEl.textContent = '渲染错误: ' + err.message;
-          formulaWrapper.appendChild(errEl);
+          var ee = document.createElement('div');
+          ee.className = 'formula-error';
+          ee.textContent = '渲染错误: ' + e.message;
+          w.appendChild(ee);
         }
-
-        docContainer.appendChild(formulaWrapper);
+        docContainer.appendChild(w);
       }
     });
 
     previewScroll.appendChild(docContainer);
     currentDocumentContainer = docContainer;
-
-    elementCountEl.textContent = (textBlockCount + formulaCount) + ' 个元素';
-
-    if (errCount > 0) {
-      setStatus('渲染完成，' + errCount + ' 个公式有语法错误', 'error');
-    } else {
-      setStatus('渲染完成，共 ' + formulaCount + ' 个独立公式，' + textBlockCount + ' 段文本');
-    }
+    elementCountEl.textContent = (textCount + formulaCount) + ' 个元素';
+    setStatus(errCount > 0 ? '渲染完成，' + errCount + ' 个公式有语法错误' : '渲染完成，共 ' + formulaCount + ' 个公式，' + textCount + ' 段文本', errCount > 0 ? 'error' : 'ok');
   }, DEBOUNCE_DELAY);
 
-  // 智能转换相关函数
+  /* ─────────────────────────────────────────────
+     LATEX → JS CONVERTER
+  ───────────────────────────────────────────── */
+  function latexToJs(latex) {
+    var s = latex.trim();
+
+    // \left \right cleanup
+    s = s.replace(/\\left\s*\(/g, '(').replace(/\\right\s*\)/g, ')');
+    s = s.replace(/\\left\s*\[/g, '(').replace(/\\right\s*\]/g, ')');
+    s = s.replace(/\\left\s*\|([^|]*?)\\right\s*\|/g, 'Math.abs($1)');
+
+    // \frac{a}{b} – iterate for nested
+    for (var fi = 0; fi < 7; fi++) {
+      var prev = s;
+      s = s.replace(/\\frac\{([^{}]*)\}\{([^{}]*)\}/g, '(($1)/($2))');
+      if (s === prev) break;
+    }
+
+    // \sqrt[n]{x}
+    s = s.replace(/\\sqrt\s*\[([^\]]*)\]\s*\{([^{}]*)\}/g, 'Math.pow(($2),(1/($1)))');
+    // \sqrt{x} – iterate
+    for (var si = 0; si < 5; si++) {
+      var prev2 = s;
+      s = s.replace(/\\sqrt\s*\{([^{}]*)\}/g, 'Math.sqrt($1)');
+      if (s === prev2) break;
+    }
+    s = s.replace(/\\sqrt\b/g, 'Math.sqrt');
+
+    // Exponents: x^{n} then x^n
+    s = s.replace(/\^\{([^{}]*)\}/g, '**($1)');
+    s = s.replace(/\^(-?\d+\.?\d*)/g, '**($1)');
+    s = s.replace(/\^([a-zA-Z])/g, '**$1');
+
+    // Subscripts – strip
+    s = s.replace(/\_\{[^{}]*\}/g, '');
+    s = s.replace(/\_[a-zA-Z0-9]/g, '');
+
+    // Inverse trig (before forward trig)
+    s = s.replace(/\\arcsin\b/g, 'Math.asin');
+    s = s.replace(/\\arccos\b/g, 'Math.acos');
+    s = s.replace(/\\arctan\b/g, 'Math.atan');
+
+    // Trig
+    s = s.replace(/\\sin\b/g, 'Math.sin');
+    s = s.replace(/\\cos\b/g, 'Math.cos');
+    s = s.replace(/\\tan\b/g, 'Math.tan');
+
+    // Hyperbolic
+    s = s.replace(/\\sinh\b/g, 'Math.sinh');
+    s = s.replace(/\\cosh\b/g, 'Math.cosh');
+    s = s.replace(/\\tanh\b/g, 'Math.tanh');
+
+    // Log / exp (ln before log)
+    s = s.replace(/\\ln\b/g, 'Math.log');
+    s = s.replace(/\\log\b/g, 'Math.log10');
+    s = s.replace(/\\exp\b/g, 'Math.exp');
+
+    // Other
+    s = s.replace(/\\abs\b/g, 'Math.abs');
+    s = s.replace(/\\max\b/g, 'Math.max');
+    s = s.replace(/\\min\b/g, 'Math.min');
+    s = s.replace(/\\floor\b|\\lfloor\b/g, 'Math.floor');
+    s = s.replace(/\\rfloor\b/g, ')');
+    s = s.replace(/\\ceil\b|\\lceil\b/g, 'Math.ceil');
+    s = s.replace(/\\rceil\b/g, ')');
+    s = s.replace(/\\sign\b/g, 'Math.sign');
+
+    // Constants
+    s = s.replace(/\\pi\b/g, 'Math.PI');
+    s = s.replace(/\\infty\b/g, 'Infinity');
+    s = s.replace(/\\e\b/g, 'Math.E');
+
+    // Remove remaining LaTeX commands
+    s = s.replace(/\\[a-zA-Z]+\*/g, '');
+    s = s.replace(/\\[a-zA-Z]+/g, '');
+
+    // Remove braces
+    s = s.replace(/[{}]/g, '');
+
+    // Implicit multiplication: 2x → 2*x, 2( → 2*(, )( → )*(
+    s = s.replace(/(\d)(x\b)/g, '$1*$2');
+    s = s.replace(/(\d)\(/g, '$1*(');
+    s = s.replace(/\)\(/g, ')*(');
+    s = s.replace(/\)(x\b)/g, ')*$1');
+
+    return s;
+  }
+
+  function createEvaluator(jsExpr) {
+    try {
+      var fn = new Function('x', '"use strict"; try { return ' + jsExpr + '; } catch(e) { return NaN; }');
+      fn(0); // test
+      return { evaluate: fn, valid: true, error: null };
+    } catch (e) {
+      return { evaluate: function() { return NaN; }, valid: false, error: e.message };
+    }
+  }
+
+  /* ─────────────────────────────────────────────
+     PARSE SELECTED FUNCTIONS
+  ───────────────────────────────────────────── */
+  function parseSelectedFunctions(selectedText) {
+    var lines = selectedText.split('\n');
+    var funcs = [];
+    lines.forEach(function (line) {
+      line = line.trim();
+      // Strip $$, $, and spaces
+      line = line.replace(/^\$+|\$+$/g, '').trim();
+      // Match y = f(x) or y=f(x)
+      var m = line.match(/^y\s*=\s*(.+)$/i);
+      if (m) {
+        var latexExpr = m[1].trim();
+        var jsExpr = latexToJs(latexExpr);
+        var ev = createEvaluator(jsExpr);
+        funcs.push({ latex: latexExpr, js: jsExpr, evaluator: ev });
+      }
+    });
+    return funcs;
+  }
+
+  /* ─────────────────────────────────────────────
+     CANVAS PLOTTING
+  ───────────────────────────────────────────── */
+  var PLOT_COLORS = ['#0A84FF', '#FF453A', '#32D74B', '#FF9F0A', '#BF5AF2', '#FF375F', '#40C8E0', '#FF6B35'];
+
+  function niceInterval(range) {
+    if (range <= 0) return 1;
+    var rough = range / 8;
+    var exp = Math.floor(Math.log10(Math.abs(rough)));
+    var frac = rough / Math.pow(10, exp);
+    var nice;
+    if (frac <= 1.2) nice = 1;
+    else if (frac <= 2.5) nice = 2;
+    else if (frac <= 6) nice = 5;
+    else nice = 10;
+    return nice * Math.pow(10, exp);
+  }
+
+  function formatNum(n) {
+    if (n === 0) return '0';
+    if (Number.isInteger(n)) return n.toString();
+    var s = parseFloat(n.toPrecision(4)).toString();
+    return s.length > 8 ? n.toExponential(2) : s;
+  }
+
+  function drawPlot(functions, xMin, xMax, yMin, yMax, canvasSize) {
+    var W = canvasSize, H = canvasSize;
+    var canvas = document.createElement('canvas');
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+
+    var ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+
+    // Helpers
+    var toCanvasX = function(x) { return (x - xMin) / (xMax - xMin) * W; };
+    var toCanvasY = function(y) { return H - (y - yMin) / (yMax - yMin) * H; };
+
+    // Background
+    ctx.fillStyle = '#1a1a1c';
+    ctx.fillRect(0, 0, W, H);
+
+    // Subtle border
+    ctx.strokeStyle = 'rgba(255,255,255,0.07)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(0.5, 0.5, W - 1, H - 1);
+
+    var xInterval = niceInterval(xMax - xMin);
+    var yInterval = niceInterval(yMax - yMin);
+
+    // Grid lines
+    ctx.strokeStyle = 'rgba(255,255,255,0.045)';
+    ctx.lineWidth = 0.5;
+
+    var x0 = Math.ceil(xMin / xInterval) * xInterval;
+    for (var gx = x0; gx <= xMax + 1e-9; gx += xInterval) {
+      var cgx = toCanvasX(gx);
+      ctx.beginPath(); ctx.moveTo(cgx, 0); ctx.lineTo(cgx, H); ctx.stroke();
+    }
+    var y0 = Math.ceil(yMin / yInterval) * yInterval;
+    for (var gy = y0; gy <= yMax + 1e-9; gy += yInterval) {
+      var cgy = toCanvasY(gy);
+      ctx.beginPath(); ctx.moveTo(0, cgy); ctx.lineTo(W, cgy); ctx.stroke();
+    }
+
+    // Axis positions (clamped to canvas)
+    var axisX = Math.max(1, Math.min(W - 1, toCanvasX(0)));  // y-axis
+    var axisY = Math.max(1, Math.min(H - 1, toCanvasY(0)));  // x-axis
+
+    // X axis
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,255,255,0.65)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(0, axisY); ctx.lineTo(W, axisY); ctx.stroke();
+    // X arrow
+    ctx.fillStyle = 'rgba(255,255,255,0.65)';
+    ctx.beginPath();
+    ctx.moveTo(W - 1, axisY);
+    ctx.lineTo(W - 10, axisY - 5);
+    ctx.lineTo(W - 10, axisY + 5);
+    ctx.closePath(); ctx.fill();
+    // X label
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ctx.font = 'italic 13px Georgia, serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+    ctx.fillText('x', W - 5, axisY - 7);
+    ctx.restore();
+
+    // Y axis
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,255,255,0.65)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(axisX, 0); ctx.lineTo(axisX, H); ctx.stroke();
+    // Y arrow
+    ctx.fillStyle = 'rgba(255,255,255,0.65)';
+    ctx.beginPath();
+    ctx.moveTo(axisX, 1);
+    ctx.lineTo(axisX - 5, 12);
+    ctx.lineTo(axisX + 5, 12);
+    ctx.closePath(); ctx.fill();
+    // Y label
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ctx.font = 'italic 13px Georgia, serif';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.fillText('y', axisX + 8, 14);
+    ctx.restore();
+
+    // Ticks & labels
+    ctx.save();
+    ctx.fillStyle = 'rgba(255,255,255,0.42)';
+    ctx.strokeStyle = 'rgba(255,255,255,0.38)';
+    ctx.font = '11px -apple-system, "Noto Sans SC", sans-serif';
+    ctx.lineWidth = 1;
+
+    // X ticks
+    for (var tx = x0; tx <= xMax + 1e-9; tx += xInterval) {
+      var ctxX = toCanvasX(tx);
+      ctx.beginPath(); ctx.moveTo(ctxX, axisY - 5); ctx.lineTo(ctxX, axisY + 5); ctx.stroke();
+      if (Math.abs(tx) > 1e-9) {
+        ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        var labelY = (axisY + 8 < H - 14) ? axisY + 8 : axisY - 18;
+        ctx.fillText(formatNum(tx), ctxX, labelY);
+      }
+    }
+
+    // Y ticks
+    for (var ty = y0; ty <= yMax + 1e-9; ty += yInterval) {
+      var ctyY = toCanvasY(ty);
+      ctx.beginPath(); ctx.moveTo(axisX - 5, ctyY); ctx.lineTo(axisX + 5, ctyY); ctx.stroke();
+      if (Math.abs(ty) > 1e-9) {
+        ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+        var labelX = (axisX - 8 > 28) ? axisX - 8 : axisX + 8;
+        ctx.textAlign = labelX < axisX ? 'right' : 'left';
+        ctx.fillText(formatNum(ty), labelX, ctyY);
+      }
+    }
+
+    // Origin label
+    if (xMin < 0 && xMax > 0 && yMin < 0 && yMax > 0) {
+      ctx.textAlign = 'right'; ctx.textBaseline = 'top';
+      ctx.fillText('0', axisX - 5, axisY + 4);
+    }
+    ctx.restore();
+
+    // Plot functions
+    var STEPS = Math.max(W * 2, 1200);
+    var dx = (xMax - xMin) / STEPS;
+    var yRange = yMax - yMin;
+
+    functions.forEach(function (fn, idx) {
+      if (!fn.evaluator.valid) return;
+      var color = PLOT_COLORS[idx % PLOT_COLORS.length];
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2.2;
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
+
+      ctx.beginPath();
+      var penDown = false;
+      var prevY = NaN;
+
+      for (var i = 0; i <= STEPS; i++) {
+        var px = xMin + i * dx;
+        var py = fn.evaluator.evaluate(px);
+
+        if (!isFinite(py) || isNaN(py)) {
+          penDown = false;
+          prevY = NaN;
+          continue;
+        }
+
+        // Discontinuity detection
+        if (isFinite(prevY) && Math.abs(py - prevY) > yRange * 3) {
+          penDown = false;
+        }
+
+        var cpx = toCanvasX(px);
+        var cpy = toCanvasY(py);
+
+        // Clip to canvas bounds with margin
+        if (cpy < -H || cpy > H * 2) {
+          penDown = false;
+          prevY = py;
+          continue;
+        }
+
+        if (!penDown) {
+          ctx.moveTo(cpx, cpy);
+          penDown = true;
+        } else {
+          ctx.lineTo(cpx, cpy);
+        }
+        prevY = py;
+      }
+
+      ctx.stroke();
+      ctx.restore();
+    });
+
+    return canvas;
+  }
+
+  /* ─────────────────────────────────────────────
+     PLOT MODAL
+  ───────────────────────────────────────────── */
+  var plotModalOverlay = document.getElementById('plot-modal-overlay');
+  var plotFunctionsList = document.getElementById('plot-functions-list');
+  var plotModalConfirm = document.getElementById('plot-modal-confirm');
+  var currentFunctions = [];
+
+  function openPlotModal() {
+    var sel = textarea.value.substring(textarea.selectionStart, textarea.selectionEnd).trim();
+    if (!sel) {
+      showToast('请先选中包含 y = f(x) 的文本');
+      haptic([10, 30, 10]);
+      return;
+    }
+
+    currentFunctions = parseSelectedFunctions(sel);
+
+    // Render function chips
+    plotFunctionsList.innerHTML = '';
+    if (currentFunctions.length === 0) {
+      var noFn = document.createElement('div');
+      noFn.className = 'fn-no-funcs';
+      noFn.textContent = '未找到 y = f(x) 格式的函数，请确认选中的文本包含该格式';
+      plotFunctionsList.appendChild(noFn);
+      plotModalConfirm.disabled = true;
+    } else {
+      plotModalConfirm.disabled = false;
+      currentFunctions.forEach(function (fn, idx) {
+        var chip = document.createElement('div');
+        chip.className = 'fn-chip';
+        var dot = document.createElement('span');
+        dot.className = 'fn-color-dot';
+        dot.style.background = PLOT_COLORS[idx % PLOT_COLORS.length];
+        dot.style.boxShadow = '0 0 6px ' + PLOT_COLORS[idx % PLOT_COLORS.length] + '80';
+        var expr = document.createElement('span');
+        expr.className = 'fn-expr';
+        expr.textContent = 'y = ' + fn.latex;
+        chip.appendChild(dot);
+        chip.appendChild(expr);
+        if (!fn.evaluator.valid) {
+          var err = document.createElement('span');
+          err.className = 'fn-error';
+          err.textContent = '⚠ 解析失败';
+          chip.appendChild(err);
+        }
+        plotFunctionsList.appendChild(chip);
+      });
+    }
+
+    // Auto-range based on functions
+    autoRangeFromFunctions(currentFunctions);
+
+    // Show modal
+    plotModalOverlay.classList.remove('closing');
+    plotModalOverlay.classList.add('visible');
+    haptic(10);
+  }
+
+  function autoRangeFromFunctions(fns) {
+    // Default range
+    var xMin = -10, xMax = 10, yMin = -10, yMax = 10;
+    document.getElementById('plot-xmin').value = xMin;
+    document.getElementById('plot-xmax').value = xMax;
+    document.getElementById('plot-ymin').value = yMin;
+    document.getElementById('plot-ymax').value = yMax;
+  }
+
+  function closePlotModal() {
+    plotModalOverlay.classList.add('closing');
+    setTimeout(function () {
+      plotModalOverlay.classList.remove('visible');
+      plotModalOverlay.classList.remove('closing');
+    }, 220);
+  }
+
+  function executePlot() {
+    var xMin = parseFloat(document.getElementById('plot-xmin').value);
+    var xMax = parseFloat(document.getElementById('plot-xmax').value);
+    var yMin = parseFloat(document.getElementById('plot-ymin').value);
+    var yMax = parseFloat(document.getElementById('plot-ymax').value);
+    var sizeEl = document.querySelector('input[name="plot-size"]:checked');
+    var size = sizeEl ? parseInt(sizeEl.value) : 600;
+
+    if (isNaN(xMin) || isNaN(xMax) || isNaN(yMin) || isNaN(yMax) || xMin >= xMax || yMin >= yMax) {
+      showToast('⚠ 请检查范围设置（最小值需小于最大值）');
+      return;
+    }
+
+    var validFns = currentFunctions.filter(function (f) { return f.evaluator.valid; });
+    if (validFns.length === 0) {
+      showToast('⚠ 没有可绘制的有效函数');
+      return;
+    }
+
+    closePlotModal();
+    haptic(15);
+
+    setTimeout(function () {
+      var canvas = drawPlot(validFns, xMin, xMax, yMin, yMax, size);
+
+      // Build plot output block
+      var block = document.createElement('div');
+      block.className = 'plot-output-block';
+
+      var header = document.createElement('div');
+      header.className = 'plot-output-header';
+      var title = document.createElement('span');
+      title.className = 'plot-output-title';
+      title.textContent = '📈 函数图像';
+      var meta = document.createElement('span');
+      meta.className = 'plot-output-meta';
+      meta.textContent = 'x ∈ [' + xMin + ', ' + xMax + ']  y ∈ [' + yMin + ', ' + yMax + ']';
+      header.appendChild(title);
+      header.appendChild(meta);
+
+      var wrapper = document.createElement('div');
+      wrapper.className = 'plot-canvas-wrapper';
+      wrapper.appendChild(canvas);
+
+      var legend = document.createElement('div');
+      legend.className = 'plot-legend';
+      validFns.forEach(function (fn, idx) {
+        var item = document.createElement('span');
+        item.className = 'legend-item';
+        var dot = document.createElement('span');
+        dot.className = 'legend-dot';
+        dot.style.background = PLOT_COLORS[idx % PLOT_COLORS.length];
+        var txt = document.createTextNode('y = ' + fn.latex);
+        item.appendChild(dot);
+        item.appendChild(txt);
+        legend.appendChild(item);
+      });
+
+      block.appendChild(header);
+      block.appendChild(wrapper);
+      block.appendChild(legend);
+
+      // Append to preview scroll (after existing content)
+      previewScroll.appendChild(block);
+      block.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+      showToast('✅ 绘制了 ' + validFns.length + ' 个函数');
+      setStatus('图像绘制完成 — ' + validFns.length + ' 个函数');
+    }, 250);
+  }
+
+  // Modal events
+  document.getElementById('plot-modal-close').addEventListener('click', closePlotModal);
+  document.getElementById('plot-modal-cancel').addEventListener('click', closePlotModal);
+  document.getElementById('plot-modal-confirm').addEventListener('click', executePlot);
+  plotModalOverlay.addEventListener('click', function (e) {
+    if (e.target === plotModalOverlay) closePlotModal();
+  });
+
+  /* ─────────────────────────────────────────────
+     SMART CONVERT
+  ───────────────────────────────────────────── */
   var GREEK_MAP = {
     alpha:'\\alpha', beta:'\\beta', gamma:'\\gamma', delta:'\\delta',
     epsilon:'\\epsilon', zeta:'\\zeta', eta:'\\eta', theta:'\\theta',
     iota:'\\iota', kappa:'\\kappa', lambda:'\\lambda', mu:'\\mu',
-    nu:'\\nu', xi:'\\xi', omicron:'\\omicron', pi:'\\pi',
-    rho:'\\rho', sigma:'\\sigma', tau:'\\tau', upsilon:'\\upsilon',
-    phi:'\\phi', chi:'\\chi', psi:'\\psi', omega:'\\omega',
+    nu:'\\nu', xi:'\\xi', pi:'\\pi', rho:'\\rho', sigma:'\\sigma',
+    tau:'\\tau', upsilon:'\\upsilon', phi:'\\phi', chi:'\\chi',
+    psi:'\\psi', omega:'\\omega',
   };
-
-  function step1_varNumber(t) { return t.replace(/([a-zA-Z])(\d+)/g, '$1^{$2}'); }
-  function step2_subscript(t) { return t.replace(/([a-zA-Z])_([a-zA-Z0-9]+)/g, '$1_{$2}'); }
-  function step3_greek(t) {
-    var re = new RegExp('\\b(' + Object.keys(GREEK_MAP).join('|') + ')\\b', 'g');
-    return t.replace(re, function (m) { return GREEK_MAP[m] || m; });
-  }
-  function step4_fraction(t) {
-    t = t.replace(/([^\s]+)\s+\/\s+([^\s]+)/g, '\\frac{$1}{$2}');
-    t = t.replace(/(?<!\\frac\{[^}]*)([^\s\\{}])\s*\/\s*([^\s\\{}])/g, function(_, a, b) { return '\\frac{' + a + '}{' + b + '}'; });
-    return t;
-  }
-  function step5_wrap(t) { return '$$' + t + '$$'; }
-
   function smartConvert(text) {
     var t = text;
-    t = step1_varNumber(t);
-    t = step2_subscript(t);
-    t = step3_greek(t);
-    t = step4_fraction(t);
-    t = step5_wrap(t);
-    return t;
+    t = t.replace(/([a-zA-Z])(\d+)/g, '$1^{$2}');
+    t = t.replace(/([a-zA-Z])_([a-zA-Z0-9]+)/g, '$1_{$2}');
+    var greekRe = new RegExp('\\b(' + Object.keys(GREEK_MAP).join('|') + ')\\b', 'g');
+    t = t.replace(greekRe, function (m) { return GREEK_MAP[m] || m; });
+    t = t.replace(/([^\s]+)\s+\/\s+([^\s]+)/g, '\\frac{$1}{$2}');
+    return '$$' + t + '$$';
   }
-
   function applySmartConvert() {
-    var start = textarea.selectionStart;
-    var end = textarea.selectionEnd;
-    if (start === end) {
-      showToast('请先选中要转换的文本');
-      haptic([10, 30, 10]);
-      return;
-    }
+    var start = textarea.selectionStart, end = textarea.selectionEnd;
+    if (start === end) { showToast('请先选中要转换的文本'); haptic([10,30,10]); return; }
     var selected = textarea.value.substring(start, end);
     var converted = smartConvert(selected);
-    var before = textarea.value.substring(0, start);
-    var after = textarea.value.substring(end);
-    textarea.value = before + converted + after;
-    var newEnd = start + converted.length;
-    textarea.setSelectionRange(newEnd, newEnd);
-    textarea.focus();
-    haptic(12);
-    showToast('✨ 智能转换完成');
-    refreshPreview();
+    textarea.value = textarea.value.substring(0, start) + converted + textarea.value.substring(end);
+    textarea.setSelectionRange(start + converted.length, start + converted.length);
+    textarea.focus(); haptic(12); showToast('✨ 智能转换完成'); refreshPreview();
   }
 
+  /* ─────────────────────────────────────────────
+     EXPORT
+  ───────────────────────────────────────────── */
   async function exportPreviewAsImage() {
-    if (!currentDocumentContainer) {
-      showToast('没有可导出的内容');
-      return;
-    }
-    if (typeof htmlToImage === 'undefined') {
-      showToast('⚠ html-to-image 未加载');
-      return;
-    }
+    if (!currentDocumentContainer) { showToast('没有可导出的内容'); return; }
+    if (typeof htmlToImage === 'undefined') { showToast('⚠ html-to-image 未加载'); return; }
     try {
       setStatus('正在导出图片...', 'working');
-      var tempContainer = document.createElement('div');
-      tempContainer.style.backgroundColor = '#ffffff';
-      tempContainer.style.padding = '40px';
-      tempContainer.style.display = 'inline-block';
+      var temp = document.createElement('div');
+      temp.style.cssText = 'background:#fff;padding:40px;display:inline-block;';
       var clone = currentDocumentContainer.cloneNode(true);
-      clone.style.backgroundColor = '#ffffff';
-      clone.style.color = '#000000';
-      clone.style.boxShadow = 'none';
-      var textDivs = clone.querySelectorAll('.document-text');
-      textDivs.forEach(function(div) { div.style.color = '#000000'; });
-      var katexElements = clone.querySelectorAll('.katex');
-      katexElements.forEach(function(katexEl) { katexEl.style.color = '#000000'; });
-      tempContainer.appendChild(clone);
-      document.body.appendChild(tempContainer);
-      var dataUrl = await htmlToImage.toPng(tempContainer, {
-        backgroundColor: '#ffffff',
-        pixelRatio: EXPORT_PX_RATIO * 1.5,
-        quality: 1.0,
-      });
-      document.body.removeChild(tempContainer);
-      var timestamp = new Date().toISOString().slice(0,19).replace(/:/g, '-');
+      clone.style.cssText = 'background:#fff;color:#000;box-shadow:none;';
+      clone.querySelectorAll('.document-text, .katex').forEach(function(el) { el.style.color='#000'; });
+      temp.appendChild(clone);
+      document.body.appendChild(temp);
+      var dataUrl = await htmlToImage.toPng(temp, { backgroundColor:'#fff', pixelRatio: 3, quality: 1.0 });
+      document.body.removeChild(temp);
       var a = document.createElement('a');
       a.href = dataUrl;
-      a.download = 'latex_' + timestamp + '.png';
+      a.download = 'latex_' + new Date().toISOString().slice(0,19).replace(/:/g,'-') + '.png';
       a.click();
-      setStatus('导出成功');
-      showToast('✅ 图片已下载');
-    } catch (err) {
-      setStatus('导出失败', 'error');
-      showToast('⚠ 导出失败');
-    }
+      setStatus('导出成功'); showToast('✅ 图片已下载');
+    } catch (e) { setStatus('导出失败','error'); showToast('⚠ 导出失败'); }
   }
 
   async function exportAsPDF() {
-    if (!currentDocumentContainer) {
-      showToast('没有可导出的内容');
-      return;
-    }
-    if (typeof html2pdf === 'undefined') {
-      showToast('⚠ html2pdf 库未加载，请刷新重试');
-      return;
-    }
-    
-    setStatus('正在准备PDF...', 'working');
+    if (!currentDocumentContainer) { showToast('没有可导出的内容'); return; }
+    if (typeof html2pdf === 'undefined') { showToast('⚠ html2pdf 未加载'); return; }
+    setStatus('正在准备PDF...','working');
     showToast('📄 正在生成 PDF，请稍候...', 2000);
-    
     try {
-      var cloneContainer = currentDocumentContainer.cloneNode(true);
-      cloneContainer.style.backgroundColor = '#ffffff';
-      cloneContainer.style.color = '#000000';
-      cloneContainer.style.padding = '32px 40px';
-      cloneContainer.style.borderRadius = '0px';
-      cloneContainer.style.boxShadow = 'none';
-      
-      var allTextDivs = cloneContainer.querySelectorAll('.document-text');
-      allTextDivs.forEach(function(div) { div.style.color = '#000000'; });
-      var allKatex = cloneContainer.querySelectorAll('.katex');
-      allKatex.forEach(function(el) { el.style.color = '#000000'; });
-      var allFormulas = cloneContainer.querySelectorAll('.document-formula');
-      allFormulas.forEach(function(w) { w.style.color = '#000000'; });
-      
+      var clone = currentDocumentContainer.cloneNode(true);
+      clone.style.cssText = 'background:#fff;color:#000;padding:32px 40px;border-radius:0;box-shadow:none;';
+      clone.querySelectorAll('.document-text,.katex,.document-formula').forEach(function(el){ el.style.color='#000'; });
       var wrapper = document.createElement('div');
-      wrapper.style.position = 'absolute';
-      wrapper.style.top = '-9999px';
-      wrapper.style.left = '-9999px';
-      wrapper.style.backgroundColor = '#ffffff';
-      wrapper.style.width = '800px';
-      wrapper.style.padding = '20px';
-      wrapper.appendChild(cloneContainer);
+      wrapper.style.cssText = 'position:absolute;top:-9999px;left:-9999px;background:#fff;width:800px;padding:20px;';
+      wrapper.appendChild(clone);
       document.body.appendChild(wrapper);
-      
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      var opt = {
-        margin: [0.5, 0.5, 0.5, 0.5],
-        filename: 'latex_document_' + new Date().toISOString().slice(0,19).replace(/:/g, '-') + '.pdf',
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2.5, backgroundColor: '#ffffff', useCORS: true, logging: false, letterRendering: true },
-        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
-      };
-      
-      const pdfBlob = await html2pdf().set(opt).from(wrapper).outputPdf('blob');
+      await new Promise(function(r){ setTimeout(r,300); });
+      var opt = { margin:[0.5,0.5,0.5,0.5], filename:'latex_'+new Date().toISOString().slice(0,10)+'.pdf', image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2.5,backgroundColor:'#fff',useCORS:true,logging:false}, jsPDF:{unit:'in',format:'a4',orientation:'portrait'} };
+      var pdfBlob = await html2pdf().set(opt).from(wrapper).outputPdf('blob');
       document.body.removeChild(wrapper);
-      
-      if (navigator.canShare && navigator.canShare({ files: [new File([pdfBlob], 'document.pdf', { type: 'application/pdf' })] })) {
-        const file = new File([pdfBlob], 'latex_document.pdf', { type: 'application/pdf' });
-        await navigator.share({ title: 'LaTeX 文档', text: '分享导出的 LaTeX 文档', files: [file] });
-        setStatus('PDF 已分享', 'ok');
-        showToast('✅ 分享完成');
+      if (navigator.canShare && navigator.canShare({ files:[new File([pdfBlob],'doc.pdf',{type:'application/pdf'})] })) {
+        await navigator.share({ title:'LaTeX 文档', files:[new File([pdfBlob],'latex_document.pdf',{type:'application/pdf'})] });
+        setStatus('PDF 已分享'); showToast('✅ 分享完成');
       } else {
         var url = URL.createObjectURL(pdfBlob);
-        var a = document.createElement('a');
-        a.href = url;
-        a.download = 'latex_document.pdf';
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(function() { document.body.removeChild(a); URL.revokeObjectURL(url); }, 200);
-        setStatus('PDF 已下载', 'ok');
-        showToast('📄 PDF 已下载');
+        var a = document.createElement('a'); a.href=url; a.download='latex_document.pdf';
+        document.body.appendChild(a); a.click();
+        setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(url); },200);
+        setStatus('PDF 已下载'); showToast('📄 PDF 已下载');
       }
-    } catch (err) {
-      console.error('PDF导出错误:', err);
-      setStatus('PDF导出失败', 'error');
-      showToast('❌ PDF 生成失败，请重试');
-    }
+    } catch(e) { setStatus('PDF导出失败','error'); showToast('❌ PDF 生成失败'); }
   }
 
+  /* ─────────────────────────────────────────────
+     FILE OPS
+  ───────────────────────────────────────────── */
   function newDocument() { textarea.value = ''; refreshPreview(); showToast('📄 新建文档'); }
   function openFile() { document.getElementById('file-input').click(); }
-  function handleFileOpen(event) {
-    var file = event.target.files[0];
-    if (!file) return;
+  function handleFileOpen(e) {
+    var file = e.target.files[0]; if (!file) return;
     var reader = new FileReader();
-    reader.onload = function (e) { textarea.value = e.target.result; refreshPreview(); showToast('📂 ' + file.name); };
-    reader.readAsText(file, 'utf-8');
-    event.target.value = '';
+    reader.onload = function(ev) { textarea.value = ev.target.result; refreshPreview(); showToast('📂 ' + file.name); };
+    reader.readAsText(file,'utf-8'); e.target.value = '';
   }
   function saveFile() {
-    var blob = new Blob([textarea.value], { type: 'text/plain;charset=utf-8' });
+    var blob = new Blob([textarea.value],{type:'text/plain;charset=utf-8'});
     var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = 'document.tex';
-    a.click();
-    setTimeout(function () { URL.revokeObjectURL(url); }, 100);
+    var a = document.createElement('a'); a.href=url; a.download='document.tex'; a.click();
+    setTimeout(function(){ URL.revokeObjectURL(url); },100);
     showToast('💾 已保存');
   }
 
+  /* ─────────────────────────────────────────────
+     RESIZER
+  ───────────────────────────────────────────── */
+  var resizer = document.getElementById('resizer');
+  var editorPane = document.getElementById('editor-pane');
+  var mainEl = document.getElementById('main');
+  var isResizing = false;
+  resizer.addEventListener('mousedown', function(e) {
+    isResizing = true; resizer.classList.add('dragging');
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', function(e) {
+    if (!isResizing) return;
+    var rect = mainEl.getBoundingClientRect();
+    var w = Math.max(280, Math.min(e.clientX - rect.left, rect.width - 280));
+    editorPane.style.width = w + 'px';
+  });
+  document.addEventListener('mouseup', function() {
+    if (isResizing) { isResizing = false; resizer.classList.remove('dragging'); }
+  });
+
+  /* ─────────────────────────────────────────────
+     EVENT LISTENERS
+  ───────────────────────────────────────────── */
   document.getElementById('btn-new').addEventListener('click', newDocument);
   document.getElementById('btn-open').addEventListener('click', openFile);
   document.getElementById('btn-save').addEventListener('click', saveFile);
   document.getElementById('btn-export-preview').addEventListener('click', exportPreviewAsImage);
   document.getElementById('btn-export-pdf').addEventListener('click', exportAsPDF);
   document.getElementById('btn-smart-convert').addEventListener('click', applySmartConvert);
+  document.getElementById('btn-plot').addEventListener('click', openPlotModal);
+  document.getElementById('btn-plot-pane').addEventListener('click', openPlotModal);
   document.getElementById('file-input').addEventListener('change', handleFileOpen);
   textarea.addEventListener('input', refreshPreview);
 
@@ -910,26 +1425,31 @@ function init() {
     if (!mod) return;
     switch (e.key.toLowerCase()) {
       case 'k': e.preventDefault(); applySmartConvert(); break;
+      case 'p': e.preventDefault(); openPlotModal(); break;
       case 'n': e.preventDefault(); newDocument(); break;
       case 'o': e.preventDefault(); openFile(); break;
       case 's': e.preventDefault(); saveFile(); break;
     }
   });
 
-  var DEMO = '# 行内公式示例\n\n' +
-             '你可以这样写：hi $\\frac{x}{c}$  ← 公式和文字在同一行！\n\n' +
-             '也可以写：欧拉公式 $e^{i\\pi} + 1 = 0$ 很美。\n\n' +
-             '## 独立公式块\n\n' +
-             '独立公式会居中显示：\n\n' +
-             '$$\\int_{-\\infty}^{\\infty} e^{-x^2} dx = \\sqrt{\\pi}$$\n\n' +
-             '## 导出PDF功能\n\n' +
-             '点击工具栏「 导出PDF」按钮，可在iOS上直接分享到微信。\n\n' +
-             '## 智能转换\n\n' +
-             '选中 `x2 + y2 / r2` 然后按 `crtl+K`，会自动转换为独立公式。';
+  /* ─────────────────────────────────────────────
+     DEMO CONTENT
+  ───────────────────────────────────────────── */
+  var DEMO = '# LaTeX Editor with Function Plotter\n\n' +
+    '欢迎使用增强版编辑器。支持行内公式 $e^{i\\pi} + 1 = 0$ 和独立公式块。\n\n' +
+    '$$\\int_{-\\infty}^{\\infty} e^{-x^2} dx = \\sqrt{\\pi}$$\n\n' +
+    '## 绘图功能 📈\n\n' +
+    '选中下方一行或多行，按 **⌘P**（或点击"绘图"按钮）即可绘制：\n\n' +
+    'y = x^2\n' +
+    'y = \\sin(x)\n' +
+    'y = \\frac{1}{x}\n\n' +
+    '> 提示：可多选几行同时绘制到同一坐标系。\n\n' +
+    '## 智能转换\n\n' +
+    '选中 `x2 + sin(x)` 再按 **⌘K** 可自动转换为 LaTeX 公式。';
 
   textarea.value = DEMO;
   refreshPreview();
-  setStatus('就绪 — 支持导出PDF并分享微信 | 编辑器字体已优化');
+  setStatus('就绪 — 使用 ⌘P 绘制函数图像 · ⌘K 智能转换');
 }
 </script>
 </body>
