@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover" />
-<title>LaTeX Editor - 支持导出PDF & iOS分享</title>
+<title>LaTeX Editor - 支持行内公式 & PDF导出</title>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" />
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
@@ -34,8 +34,9 @@
   --radius:         12px;
   --radius-sm:      8px;
   --radius-xs:      6px;
-  --font-ui:        "SF Pro Display","PingFang SC","Inter",system-ui,sans-serif;
-  --font-mono:      "SF Mono","Fira Code","JetBrains Mono",monospace;
+  --font-ui:        -apple-system, "SF Pro Text", "PingFang SC", "Microsoft YaHei", "Segoe UI", Roboto, system-ui, sans-serif;
+  --font-editor:    "SF Mono", "Fira Code", "JetBrains Mono", "Cascadia Code", "Consolas", "Monaco", monospace;
+  --font-preview:   -apple-system, "SF Pro Text", "PingFang SC", "Microsoft YaHei", "Segoe UI", Roboto, Georgia, "Times New Roman", serif;
   --shadow-card:    0 2px 16px rgba(0,0,0,0.45), 0 0 0 0.5px rgba(255,255,255,0.06);
   --shadow-btn:     0 1px 4px rgba(0,0,0,0.4);
   --transition:     0.2s cubic-bezier(0.4,0,0.2,1);
@@ -192,9 +193,11 @@ body {
   color: var(--text-primary);
   border: none;
   resize: none;
-  font-family: var(--font-mono);
-  font-size: 13.5px;
-  line-height: 1.75;
+  /* 优化编辑器字体 - 电脑端更大更舒适 */
+  font-family: var(--font-editor);
+  font-size: 15px;
+  line-height: 1.7;
+  letter-spacing: 0.3px;
   padding: 20px 22px;
   outline: none;
   tab-size: 2;
@@ -223,7 +226,7 @@ kbd {
   border: 0.5px solid rgba(255,255,255,0.12);
   border-radius: 4px;
   font-size: 10.5px;
-  font-family: var(--font-mono);
+  font-family: var(--font-editor);
   color: var(--text-secondary);
 }
 
@@ -285,34 +288,43 @@ kbd {
   box-shadow: 0 4px 24px rgba(0,0,0,0.55), 0 0 0 0.5px rgba(255,255,255,0.1);
 }
 
+/* 预览区正文字体优化 */
 .document-text {
   margin: 0.75em 0;
   line-height: 1.7;
   white-space: pre-wrap;
   color: var(--text-primary);
-  font-size: 14px;
+  font-family: var(--font-preview);
+  font-size: 15px;
+  letter-spacing: 0.2px;
 }
 .document-text h1 {
+  font-family: var(--font-ui);
   font-size: 1.8em;
+  font-weight: 600;
   margin: 0.67em 0;
   border-bottom: 1px solid var(--border);
   padding-bottom: 0.3em;
 }
 .document-text h2 {
+  font-family: var(--font-ui);
   font-size: 1.5em;
+  font-weight: 600;
   margin: 0.75em 0;
   border-bottom: 1px solid var(--border);
   padding-bottom: 0.3em;
 }
 .document-text h3 {
+  font-family: var(--font-ui);
   font-size: 1.25em;
+  font-weight: 600;
   margin: 0.83em 0;
 }
 .document-text code {
+  font-family: var(--font-editor);
   background: rgba(255,255,255,0.07);
   padding: 2px 6px;
   border-radius: 4px;
-  font-family: var(--font-mono);
   font-size: 0.9em;
 }
 .document-text strong { font-weight: 600; }
@@ -332,11 +344,12 @@ kbd {
 }
 .katex {
   color: rgba(255,255,255,0.9) !important;
+  font-size: 1.05em;
 }
 .formula-error {
   color: var(--danger);
   font-size: 12px;
-  font-family: var(--font-mono);
+  font-family: var(--font-editor);
   padding: 8px 12px;
   background: rgba(255,69,58,0.1);
   border-radius: var(--radius-xs);
@@ -356,7 +369,7 @@ kbd {
   flex-shrink: 0;
   font-size: 11.5px;
   color: var(--text-secondary);
-  font-family: var(--font-mono);
+  font-family: var(--font-editor);
 }
 .status-dot {
   width: 6px;
@@ -382,6 +395,7 @@ kbd {
   border-radius: 20px;
   font-size: 13px;
   color: var(--text-primary);
+  font-family: var(--font-ui);
   backdrop-filter: blur(14px);
   box-shadow: 0 4px 24px rgba(0,0,0,0.5);
   opacity: 0;
@@ -393,6 +407,19 @@ kbd {
   text-align: center;
 }
 #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* 电脑端字体进一步优化 */
+@media (min-width: 1024px) {
+  #editor-textarea {
+    font-size: 16px;
+    line-height: 1.75;
+    letter-spacing: 0.4px;
+  }
+  .document-text {
+    font-size: 16px;
+    line-height: 1.75;
+  }
+}
 
 @media (max-width: 767px) {
   #main { flex-direction: column; }
@@ -408,6 +435,14 @@ kbd {
   .document-container { padding: 16px 20px; }
   .pane-header { flex-direction: column; align-items: stretch; gap: 8px; }
   .pane-header-actions { justify-content: flex-start; }
+  /* 移动端编辑器字体稍微调小 */
+  #editor-textarea {
+    font-size: 14px;
+    line-height: 1.65;
+  }
+  .document-text {
+    font-size: 14px;
+  }
 }
 </style>
 </head>
@@ -421,8 +456,8 @@ kbd {
     <input type="file" id="file-input" accept=".tex,.txt,.md" style="display:none" />
     <button class="btn" id="btn-save">保存</button>
     <div class="toolbar-divider"></div>
-    <button class="btn" id="btn-export-pdf">📄 导出PDF</button>
-    <button class="btn accent" id="btn-export-preview">📸 导出图片</button>
+    <button class="btn accent" id="btn-export-pdf">📄 导出PDF</button>
+    <button class="btn" id="btn-export-preview">📸 导出图片</button>
     <div class="toolbar-spacer"></div>
     <div class="shortcut-badge">⌘K 智能转换</div>
   </div>
@@ -722,7 +757,6 @@ function init() {
     refreshPreview();
   }
 
-  // 导出图片 (原有功能)
   async function exportPreviewAsImage() {
     if (!currentDocumentContainer) {
       showToast('没有可导出的内容');
@@ -767,7 +801,6 @@ function init() {
     }
   }
 
-  // 新增：导出 PDF 并支持 iOS 分享 (通过生成 blob 然后调用 Web Share API 或下载)
   async function exportAsPDF() {
     if (!currentDocumentContainer) {
       showToast('没有可导出的内容');
@@ -778,11 +811,10 @@ function init() {
       return;
     }
     
-    setStatus('正在生成 PDF...', 'working');
+    setStatus('正在准备PDF...', 'working');
     showToast('📄 正在生成 PDF，请稍候...', 2000);
     
     try {
-      // 克隆预览内容并适配PDF样式
       var cloneContainer = currentDocumentContainer.cloneNode(true);
       cloneContainer.style.backgroundColor = '#ffffff';
       cloneContainer.style.color = '#000000';
@@ -790,56 +822,52 @@ function init() {
       cloneContainer.style.borderRadius = '0px';
       cloneContainer.style.boxShadow = 'none';
       
-      // 修正内部文字颜色
-      var textDivs = cloneContainer.querySelectorAll('.document-text');
-      textDivs.forEach(function(div) { div.style.color = '#000000'; });
-      var katexElements = cloneContainer.querySelectorAll('.katex');
-      katexElements.forEach(function(el) { el.style.color = '#000000'; });
-      var formulaWrappers = cloneContainer.querySelectorAll('.document-formula');
-      formulaWrappers.forEach(function(w) { w.style.color = '#000000'; });
+      var allTextDivs = cloneContainer.querySelectorAll('.document-text');
+      allTextDivs.forEach(function(div) { div.style.color = '#000000'; });
+      var allKatex = cloneContainer.querySelectorAll('.katex');
+      allKatex.forEach(function(el) { el.style.color = '#000000'; });
+      var allFormulas = cloneContainer.querySelectorAll('.document-formula');
+      allFormulas.forEach(function(w) { w.style.color = '#000000'; });
       
-      // 创建临时包装器
       var wrapper = document.createElement('div');
+      wrapper.style.position = 'absolute';
+      wrapper.style.top = '-9999px';
+      wrapper.style.left = '-9999px';
       wrapper.style.backgroundColor = '#ffffff';
-      wrapper.style.width = '210mm'; // A4 宽度参考
+      wrapper.style.width = '800px';
       wrapper.style.padding = '20px';
       wrapper.appendChild(cloneContainer);
       document.body.appendChild(wrapper);
       
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
       var opt = {
-        margin:        [0.5, 0.5, 0.5, 0.5],
-        filename:     'latex_document_' + new Date().toISOString().slice(0,19).replace(/:/g, '-') + '.pdf',
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false },
-        jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+        margin: [0.5, 0.5, 0.5, 0.5],
+        filename: 'latex_document_' + new Date().toISOString().slice(0,19).replace(/:/g, '-') + '.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2.5, backgroundColor: '#ffffff', useCORS: true, logging: false, letterRendering: true },
+        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
       };
       
-      // 生成 PDF Blob
       const pdfBlob = await html2pdf().set(opt).from(wrapper).outputPdf('blob');
       document.body.removeChild(wrapper);
       
-      // 尝试使用 Web Share API (iOS 原生分享，支持微信)
       if (navigator.canShare && navigator.canShare({ files: [new File([pdfBlob], 'document.pdf', { type: 'application/pdf' })] })) {
         const file = new File([pdfBlob], 'latex_document.pdf', { type: 'application/pdf' });
-        await navigator.share({
-          title: 'LaTeX 文档',
-          text: '分享导出的 LaTeX 文档',
-          files: [file]
-        });
+        await navigator.share({ title: 'LaTeX 文档', text: '分享导出的 LaTeX 文档', files: [file] });
         setStatus('PDF 已分享', 'ok');
         showToast('✅ 分享完成');
       } else {
-        // 降级：直接下载
         var url = URL.createObjectURL(pdfBlob);
         var a = document.createElement('a');
         a.href = url;
         a.download = 'latex_document.pdf';
+        document.body.appendChild(a);
         a.click();
-        setTimeout(function() { URL.revokeObjectURL(url); }, 200);
+        setTimeout(function() { document.body.removeChild(a); URL.revokeObjectURL(url); }, 200);
         setStatus('PDF 已下载', 'ok');
-        showToast('📄 PDF 已下载，可在文件App中分享到微信');
+        showToast('📄 PDF 已下载');
       }
-      
     } catch (err) {
       console.error('PDF导出错误:', err);
       setStatus('PDF导出失败', 'error');
@@ -847,38 +875,16 @@ function init() {
     }
   }
 
-  // 兼容旧版导出按钮
-  function exportPreview() {
-    if (!currentDocumentContainer) {
-      showToast('没有可导出的内容');
-      return;
-    }
-    exportPreviewAsImage();
-  }
-
-  function newDocument() {
-    textarea.value = '';
-    refreshPreview();
-    showToast('📄 新建文档');
-  }
-
-  function openFile() {
-    document.getElementById('file-input').click();
-  }
-
+  function newDocument() { textarea.value = ''; refreshPreview(); showToast('📄 新建文档'); }
+  function openFile() { document.getElementById('file-input').click(); }
   function handleFileOpen(event) {
     var file = event.target.files[0];
     if (!file) return;
     var reader = new FileReader();
-    reader.onload = function (e) {
-      textarea.value = e.target.result;
-      refreshPreview();
-      showToast('📂 ' + file.name);
-    };
+    reader.onload = function (e) { textarea.value = e.target.result; refreshPreview(); showToast('📂 ' + file.name); };
     reader.readAsText(file, 'utf-8');
     event.target.value = '';
   }
-
   function saveFile() {
     var blob = new Blob([textarea.value], { type: 'text/plain;charset=utf-8' });
     var url = URL.createObjectURL(blob);
@@ -890,11 +896,10 @@ function init() {
     showToast('💾 已保存');
   }
 
-  // 绑定事件
   document.getElementById('btn-new').addEventListener('click', newDocument);
   document.getElementById('btn-open').addEventListener('click', openFile);
   document.getElementById('btn-save').addEventListener('click', saveFile);
-  document.getElementById('btn-export-preview').addEventListener('click', exportPreview);
+  document.getElementById('btn-export-preview').addEventListener('click', exportPreviewAsImage);
   document.getElementById('btn-export-pdf').addEventListener('click', exportAsPDF);
   document.getElementById('btn-smart-convert').addEventListener('click', applySmartConvert);
   document.getElementById('file-input').addEventListener('change', handleFileOpen);
@@ -924,7 +929,7 @@ function init() {
 
   textarea.value = DEMO;
   refreshPreview();
-  setStatus('就绪 — 支持导出PDF并分享微信');
+  setStatus('就绪 — 支持导出PDF并分享微信 | 编辑器字体已优化');
 }
 </script>
 </body>
