@@ -1,1 +1,287 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BPIS 日常心理状态与无聊倾向性评估</title>
+    <style>
+        :root {
+            --bg-color: #f5f5f7;
+            --text-primary: #1d1d1f;
+            --text-secondary: #86868b;
+            --card-bg: rgba(255, 255, 255, 0.7);
+            --card-border: rgba(255, 255, 255, 0.5);
+            --accent-color: #0066cc;
+            --hover-bg: rgba(0, 0, 0, 0.05);
+        }
 
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #000000;
+                --text-primary: #f5f5f7;
+                --text-secondary: #a1a1a6;
+                --card-bg: rgba(28, 28, 30, 0.7);
+                --card-border: rgba(255, 255, 255, 0.1);
+                --accent-color: #2997ff;
+                --hover-bg: rgba(255, 255, 255, 0.1);
+            }
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro', 'PingFang SC', sans-serif;
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at 50% 0%, rgba(0,102,204,0.1) 0%, transparent 50%);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        header {
+            width: 100%;
+            text-align: center;
+            padding: 40px 20px 20px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+
+        p.subtitle {
+            margin: 8px 0 0 0;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+
+        #test-container {
+            width: 100%;
+            max-width: 680px;
+            margin: 30px auto;
+            padding: 0 20px;
+            box-sizing: border-box;
+        }
+
+        .question-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 4px 24px rgba(0,0,0,0.04);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .question-title {
+            font-size: 1.1rem;
+            font-weight: 500;
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+
+        .options label {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            margin: 8px 0;
+            background: transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: 0.95rem;
+        }
+
+        .options label:hover {
+            background: var(--hover-bg);
+        }
+
+        input[type="radio"] {
+            margin-right: 12px;
+            accent-color: var(--accent-color);
+            width: 16px;
+            height: 16px;
+        }
+
+        #submit-btn {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            font-size: 1.1rem;
+            color: white;
+            background-color: var(--accent-color);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            margin: 40px 0 60px;
+            font-weight: 500;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+
+        #submit-btn:active {
+            transform: scale(0.98);
+        }
+
+        #loading {
+            display: none;
+            text-align: center;
+            margin-top: 25vh;
+        }
+
+        .spinner {
+            border: 3px solid var(--card-border);
+            border-top: 3px solid var(--accent-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+            margin: 0 auto 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        #result-container {
+            display: none;
+            text-align: center;
+            margin-top: 25vh;
+            padding: 0 20px;
+        }
+
+        .punchline {
+            font-size: 2.2rem;
+            font-weight: 700;
+            line-height: 1.5;
+            letter-spacing: -1px;
+        }
+
+        .punchline span {
+            display: block;
+            font-size: 4rem;
+            margin-bottom: 24px;
+        }
+    </style>
+</head>
+<body>
+
+    <header id="header">
+        <h1>BPIS 倾向性综合评估</h1>
+        <p class="subtitle">Boredom Proneness Inventory Scale (2026 修订版) · 预计耗时 3-5 分钟</p>
+    </header>
+
+    <div id="test-container">
+        <form id="quiz-form">
+            <div id="questions-list"></div>
+            <button type="button" id="submit-btn" onclick="submitTest()">提交问卷并生成数据模型</button>
+        </form>
+    </div>
+
+    <div id="loading">
+        <div class="spinner"></div>
+        <h2 style="font-weight: 500; font-size: 1.2rem;">正在构建心理状态拓扑模型...</h2>
+        <p style="color:var(--text-secondary); font-size: 0.9rem;">正在进行交叉因子分析，请勿关闭页面</p>
+    </div>
+
+    <div id="result-container">
+        <div class="punchline">
+            <span>🤡</span>
+            你都无聊到把这30道正经题全做完了<br>
+            还不知道自己无不无聊吗？
+        </div>
+    </div>
+
+    <script>
+        // 30个极其专业、严肃的心理学风格测试题
+        const questionsData = [
+            { q: "在执行日常重复性任务时，您维持高度注意力的平均时长通常是？", opts: ["很难维持，容易走神", "能够维持一段时间，但需要努力", "可以轻松进入心流状态"] },
+            { q: "您是否经常感到目前的日常生活缺乏足够的感官或智力刺激？", opts: ["非常频繁", "偶尔会有这种感觉", "很少，我觉得生活充满挑战"] },
+            { q: "当您处于没有明确目标的闲暇时间时，您通常的情绪体验倾向于？", opts: ["焦虑、烦躁或空虚", "平静但不知所措", "享受放松和自在"] },
+            { q: "您评估自己对周围熟悉环境（如通勤路线、房间布置）产生“感官麻木”的程度是？", opts: ["重度，几乎视而不见", "中度，偶尔会注意到细节", "轻度，总是能发现新事物"] },
+            { q: "在面对需要长时间集中注意力的长篇阅读或深度思考时，您的回避倾向有多高？", opts: ["极高，习惯性寻找替代物", "中等，视任务重要性而定", "极低，乐于沉浸其中"] },
+            { q: "您是否经常幻想着完全不同的人生轨迹或处于脱离现实的情境中？", opts: ["经常，这占据了我大量时间", "偶尔作为一种放松方式", "很少，我更关注当下的现实"] },
+            { q: "当必须在没有任何电子设备的环境下独处30分钟，您的预期反应是？", opts: ["感到极度不适或烦躁", "尝试通过回忆或思考来打发时间", "觉得这是一种很好的放松"] },
+            { q: "您对曾经热衷的爱好或兴趣领域，失去热情的速度通常是？", opts: ["非常快，经常处于“三分钟热度”", "一般，会维持一段时间", "很慢，我的兴趣通常很持久"] },
+            { q: "在社交场合中，当对话停留在表层寒暄时，您感到内心疲惫的频率是？", opts: ["几乎每次都会", "取决于交谈对象", "很少，我能应对自如"] },
+            { q: "您是否经常觉得自己拥有未被充分利用的潜能，却缺乏启动的内在动机？", opts: ["是的，这让我深感挫败", "有时会有这种想法", "没有，我认为自己一直在进步"] },
+            { q: "您在社交媒体或短视频平台上无意识向下划动的行为，通常单次持续多久？", opts: ["经常超过半小时而无知觉", "大约十分钟左右", "很少进行无意识的浏览"] },
+            { q: "您对于“今天和昨天在本质上没有任何区别”这一观点的认同度是？", opts: ["极度认同，生活仿佛在循环", "部分认同", "完全不认同，每天都有新变化"] },
+            { q: "当外部环境无法提供即时反馈或奖励时，您继续当前行为的意愿是？", opts: ["迅速下降并放弃", "会勉强坚持一会儿", "不受影响，由内在目标驱动"] },
+            { q: "您在排队、等红绿灯或软件加载时，体验到的心理不适感强度为？", opts: ["强烈，必须立刻找事情做", "轻微，但仍觉不悦", "几乎没有，能够平静等待"] },
+            { q: "您评估自己日常情绪基调处于“平淡无味”状态的比例大约是？", opts: ["超过70%的时间", "大约一半的时间", "低于30%的时间"] },
+            { q: "您是否倾向于通过更高阈值的感官刺激（如极度辛辣的食物、极限运动、高分贝音乐）来确认自身存在感？", opts: ["经常需要", "偶尔尝试", "不需要，日常刺激已足够"] },
+            { q: "在一天结束进行复盘时，您感受到“意义感”或“成就感”的频率是？", opts: ["极少，通常觉得虚度光阴", "有时会有", "经常感到充实"] },
+            { q: "您对探索全新知识领域（非工作/学业要求）的初始行动阻力评分（1-10分）大概是？", opts: ["8-10分（极难开始）", "4-7分（需要一定心理建设）", "1-3分（很容易开始）"] },
+            { q: "当他人试图向您分享他们认为极具趣味的事物时，您在内心产生真实共鸣的概率是？", opts: ["很低，经常需要假装感兴趣", "一般，取决于事物本身", "很高，我很容易被感染"] },
+            { q: "您是否经常使用“随便”、“都行”、“无所谓”来回应需要做出选择的日常情境？", opts: ["这是我的高频词汇", "偶尔在不知如何选择时使用", "很少，我通常有明确偏好"] },
+            { q: "面对必须完成但缺乏智力挑战性的行政或操作类工作，您的拖延症严重程度为？", opts: ["极重，不到最后一刻绝不开始", "中等，会拖延但能按时完成", "轻微，倾向于立刻解决"] },
+            { q: "您认为“生命的无意义感”是一个经常困扰您的哲学命题吗？", opts: ["是的，经常因此感到情绪低落", "偶尔在深夜会思考", "不是，我不关注这些抽象问题"] },
+            { q: "您在观看长篇影视作品时，使用倍速播放或频繁拖拽进度条的比例是？", opts: ["几乎所有的作品都会", "部分节奏缓慢的作品会", "从不，我尊重原片节奏"] },
+            { q: "对于即将到来的周末或法定节假日，您的期待值与实际体验到的满足感之间的落差通常是？", opts: ["落差极大，假期往往比工作日更空虚", "有一定落差，但能接受", "没有落差，假期总是很愉快"] },
+            { q: "您是否经常在人群密集的聚会中，体验到一种第三视角的“游离感”或“抽离感”？", opts: ["经常，感觉自己是个旁观者", "偶尔在觉得无话可说时", "很少，我通常很投入"] },
+            { q: "您对自身情绪状态的觉察能力（即能准确描述自己当下为何种情绪）评估为？", opts: ["较弱，经常只觉得“烦”或“没意思”", "一般，能分辨基本情绪", "较强，能精准定位情绪源头"] },
+            { q: "您在过去一个月内，主动发起并组织一项社交活动的次数是？", opts: ["0次", "1-2次", "3次及以上"] },
+            { q: "您认为当前社会的信息过载，在多大程度上削弱了您对单一事物的专注度？", opts: ["极大地削弱了", "有一定影响", "几乎没有影响"] },
+            { q: "如果有一种合法的医学手段可以完全消除“无聊”这种情绪体验，您是否愿意尝试？", opts: ["非常愿意，立刻申请", "需要考虑潜在副作用", "不愿意，我认为无聊有其价值"] },
+            { q: "在完成这份涵盖30道严谨题目的心理评估量表时，您当下的核心动机是？", opts: ["纯粹为了消磨时间，因为无事可做", "对自我心理状态有探索欲", "想看结果"] }
+        ];
+
+        const listContainer = document.getElementById('questions-list');
+
+        // 渲染问题
+        questionsData.forEach((item, index) => {
+            const card = document.createElement('div');
+            card.className = 'question-card';
+            
+            let optionsHTML = '';
+            item.opts.forEach((opt, optIndex) => {
+                const inputId = `q${index}_opt${optIndex}`;
+                // 默认选中第一个，避免长问卷带来的操作疲劳
+                const checked = optIndex === 0 ? 'checked' : ''; 
+                optionsHTML += `
+                    <label for="${inputId}">
+                        <input type="radio" id="${inputId}" name="q${index}" value="${opt}" ${checked}>
+                        ${opt}
+                    </label>
+                `;
+            });
+
+            card.innerHTML = `
+                <div class="question-title">${index + 1}. ${item.q}</div>
+                <div class="options">${optionsHTML}</div>
+            `;
+            listContainer.appendChild(card);
+        });
+
+        // 提交逻辑
+        function submitTest() {
+            // 隐藏题目和头部
+            document.getElementById('header').style.display = 'none';
+            document.getElementById('test-container').style.display = 'none';
+            
+            // 显示加载动画
+            document.getElementById('loading').style.display = 'block';
+            window.scrollTo(0, 0);
+
+            // 假装深度计算，3秒后出结果
+            setTimeout(() => {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('result-container').style.display = 'block';
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
